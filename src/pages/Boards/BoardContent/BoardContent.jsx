@@ -5,6 +5,7 @@ import {
   DndContext,
   DragOverlay,
   defaultDropAnimationSideEffects,
+  closestCorners,
   PointerSensor,
   MouseSensor,
   TouchSensor,
@@ -201,7 +202,10 @@ function BoardContent({ board }) {
 
   return (
     <DndContext
+      // Cảm biến
       sensors={sensors}
+      //Thuật toán phát hiện va chạm (Nếu không có nó thì card với cover lớn sẽ không kéo qua column khác được vì bị conflict giữa card và column)
+      collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
