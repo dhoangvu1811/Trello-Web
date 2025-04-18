@@ -45,6 +45,8 @@ module.exports = {
     'keyword-spacing': 1,
     'comma-dangle': 1,
     'comma-spacing': 1,
-    'arrow-spacing': 1
+    'arrow-spacing': 1,
+    // Disable double negation warning
+    'no-extra-boolean-cast': 0
   }
 }
