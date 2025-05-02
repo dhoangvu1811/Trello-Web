@@ -211,6 +211,7 @@ function Column({ column }) {
               }}
             >
               <TextField
+                data-no-dnd={true}
                 id='outlined-search'
                 label='Enter Card title...'
                 type='text'
