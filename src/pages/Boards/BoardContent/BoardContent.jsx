@@ -29,7 +29,7 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
 }
 
-function BoardContent({ board, createNewColumn, createNewCard }) {
+function BoardContent({ board, createNewColumn, createNewCard, moveColumn }) {
   // //Nếu dùng pointerSensor thì phải kết hợp với thuộc tính touchAction:'none' ở những phần tử kéo thả
   // const pointerSensor = useSensor(PointerSensor, {
   //   activationConstraint: { distance: 10 }
@@ -220,6 +220,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
     // Kiểm tra nếu không tồn tại over (tránh trường hợp kéo ra ngoài thì over bị null)
     if (!active || !over) return
 
+    //Xử lý kéo thả card
     if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) {
       // ActiveCard là card đang được kéo
       const {
@@ -276,6 +277,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
       }
     }
 
+    // Xử lý kéo thả Column
     if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
       //Nếu vị trí sau khi kéo thả khác với vị trí ban đầu
       if (active.id !== over.id) {
@@ -298,6 +300,9 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
         const dndOrderedColumnsIds = dndOrderedColumns.map((c) => c._id)
         console.log('dndOrderedColumns: ', dndOrderedColumns)
         console.log('dndOrderedColumnsIds: ', dndOrderedColumnsIds) */
+
+        moveColumn(dndOrderedColumns)
+
         setOrderedColumns(dndOrderedColumns)
       }
     }
