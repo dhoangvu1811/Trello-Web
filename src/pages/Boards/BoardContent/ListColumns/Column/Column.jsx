@@ -23,7 +23,6 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
 import AddCardIcon from '@mui/icons-material/AddCard'
 import DragHandleIcon from '@mui/icons-material/DragHandle'
 import ListCards from './ListCards/ListCards'
-import { mapOrder } from '~/utils/sort'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { toast } from 'react-toastify'
@@ -56,14 +55,15 @@ function Column({ column, createNewCard }) {
     setAnchorEl(null)
   }
 
-  const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, '_id')
+  // Cards đã được sắp xếp ở component cha _id.jsx
+  const orderedCards = column?.cards
 
   const [openNewCardForm, setOpenNewCardForm] = useState(false)
   const toggleOpenNewCardForm = () => {
     setOpenNewCardForm(!openNewCardForm)
   }
   const [newCardTitle, setNewCardTitle] = useState('')
-  const addNewCard = async () => {
+  const addNewCard = () => {
     if (!newCardTitle) {
       toast.error('Please enter Card title!', { position: 'bottom-right' })
       return
@@ -75,7 +75,7 @@ function Column({ column, createNewCard }) {
       columnId: column._id
     }
     /* Gọi lên props function createNewCard nằm ở component cha cao nhất (board/_id.jsx) */
-    await createNewCard(newCardData)
+    createNewCard(newCardData)
     //Đóng trạng thái thêm Card mới và clear input
     toggleOpenNewCardForm()
     setNewCardTitle('')
