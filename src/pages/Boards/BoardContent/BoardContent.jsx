@@ -33,7 +33,8 @@ function BoardContent({
   createNewColumn,
   createNewCard,
   moveColumn,
-  moveCardsInTheSameColumn
+  moveCardsInTheSameColumn,
+  moveCardToDifferentColumn
 }) {
   // //Nếu dùng pointerSensor thì phải kết hợp với thuộc tính touchAction:'none' ở những phần tử kéo thả
   // const pointerSensor = useSensor(PointerSensor, {
@@ -84,7 +85,8 @@ function BoardContent({
     over,
     activeColumn,
     activeDraggingCardId,
-    activeDraggingCardData
+    activeDraggingCardData,
+    triggerFrom
   ) => {
     setOrderedColumns((prevColumn) => {
       // Tìm vị trí index cái overCard trong column đích nơi mà activeCard được thả vào
@@ -160,6 +162,16 @@ function BoardContent({
         )
       }
 
+      // Nếu function gọi từ handleDragEnd nghĩa là đã kéo thả xong thì mới gọi api 1 lần ở đây
+      if (triggerFrom === 'handleDragEnd') {
+        moveCardToDifferentColumn(
+          activeDraggingCardId,
+          oldColumnWhenDraggingCard._id,
+          nextActiveColumn._id,
+          nextColumns
+        )
+      }
+
       return nextColumns
     })
   }
@@ -213,7 +225,8 @@ function BoardContent({
         over,
         activeColumn,
         activeDraggingCardId,
-        activeDraggingCardData
+        activeDraggingCardData,
+        'handleDragOver'
       )
     }
   }
@@ -251,7 +264,8 @@ function BoardContent({
           over,
           activeColumn,
           activeDraggingCardId,
-          activeDraggingCardData
+          activeDraggingCardData,
+          'handleDragEnd'
         )
       } else {
         // Lấy vị trí cũ từ oldColumnWhenDraggingCard

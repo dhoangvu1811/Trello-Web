@@ -9,6 +9,7 @@ import {
   createNewCardAPI,
   createNewColumnAPI,
   fetchBoardDetailsAPI,
+  moveCardToDifferentColumnAPI,
   updateBoardDetailsAPI,
   updateColumnDetailsAPI
 } from '~/apis'
@@ -115,6 +116,35 @@ function Board() {
     updateColumnDetailsAPI(columnId, { cardOrderIds: dndOrderedCardIds })
   }
 
+  /* Các bước khi di chuyển card sang column khác
+  B1: Cập nhật lại mảng cardOrderIds trong column cũ (xoá đi id của card đã kéo)
+  B2: Cập nhật lại mảng  cardOrderIds trong column mới (thêm id của card đã kéo)
+  B3: Cập nhật lại trường columnId của card đã kéo*/
+  const moveCardToDifferentColumn = (
+    curentCardId,
+    prevColumnId,
+    nextColumnId,
+    dndOrderedColumns
+  ) => {
+    //Update cho chuẩn dữ liệu state board
+    const dndOrderedColumnsIds = dndOrderedColumns.map((c) => c._id)
+    const newBoard = { ...board }
+    newBoard.columns = dndOrderedColumns
+    newBoard.columnOrderIds = dndOrderedColumnsIds
+    setBoard(newBoard)
+
+    // Gọi api
+    moveCardToDifferentColumnAPI({
+      curentCardId,
+      prevColumnId,
+      prevCardOderIds: dndOrderedColumns.find((c) => c._id === prevColumnId)
+        ?.cardOrderIds,
+      nextColumnId,
+      nextCardOrderIds: dndOrderedColumns.find((c) => c._id === nextColumnId)
+        ?.cardOrderIds
+    })
+  }
+
   if (!board) {
     return (
       <Box
@@ -143,6 +173,7 @@ function Board() {
         createNewCard={createNewCard}
         moveColumn={moveColumn}
         moveCardsInTheSameColumn={moveCardsInTheSameColumn}
+        moveCardToDifferentColumn={moveCardToDifferentColumn}
       />
     </Container>
   )
