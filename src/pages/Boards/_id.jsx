@@ -14,7 +14,7 @@ import {
   updateColumnDetailsAPI
 } from '~/apis'
 import { generatePlaceholderCard } from '~/utils/formatters'
-import { isEmpty } from 'lodash'
+import { includes, isEmpty } from 'lodash'
 import CircularProgress from '@mui/material/CircularProgress'
 
 function Board() {
@@ -72,8 +72,15 @@ function Board() {
       (column) => column._id === createdCard.columnId
     )
     if (columnToUpdate) {
-      columnToUpdate.cards.push(createdCard)
-      columnToUpdate.cardOrderIds.push(createdCard._id)
+      if (columnToUpdate.cards.some((card) => card.FE_PlaceholderCard)) {
+        columnToUpdate.cards = [createdCard]
+        columnToUpdate.cardOrderIds = [createdCard._id]
+      } else {
+        //Đã có data card thì push vào cuối mảng
+        columnToUpdate.cards.push(createdCard)
+        columnToUpdate.cardOrderIds.push(createdCard._id)
+      }
+      console.log('🚀 ~ createNewCard ~ columnToUpdate:', columnToUpdate)
     }
     setBoard(newBoard)
   }
@@ -133,12 +140,19 @@ function Board() {
     newBoard.columnOrderIds = dndOrderedColumnsIds
     setBoard(newBoard)
 
+    let prevCardOderIds = dndOrderedColumns.find(
+      (c) => c._id === prevColumnId
+    )?.cardOrderIds
+    //Xử lý vấn đề khi kéo card cuối cùng ra khỏi column,column rỗng sẽ có placeholder-card
+    if (prevCardOderIds[0].includes('placeholder-card')) {
+      prevCardOderIds = []
+    }
+
     // Gọi api
     moveCardToDifferentColumnAPI({
       curentCardId,
       prevColumnId,
-      prevCardOderIds: dndOrderedColumns.find((c) => c._id === prevColumnId)
-        ?.cardOrderIds,
+      prevCardOderIds,
       nextColumnId,
       nextCardOrderIds: dndOrderedColumns.find((c) => c._id === nextColumnId)
         ?.cardOrderIds
