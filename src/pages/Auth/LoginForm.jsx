@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Avatar from '@mui/material/Avatar'
@@ -26,6 +26,10 @@ function LoginForm() {
     handleSubmit,
     formState: { errors }
   } = useForm()
+  let [searchParams] = useSearchParams()
+  const { verifiedEmail, registeredEmail } = Object.fromEntries([
+    ...searchParams
+  ])
 
   const submitLogIn = (data) => {
     console.log('🚀 ~ LoginForm ~ data:', data)
@@ -58,7 +62,7 @@ function LoginForm() {
               color: (theme) => theme.palette.grey[500]
             }}
           >
-            Author: TrungQuanDev
+            Author: DHVuxDev
           </Box>
           <Box
             sx={{
@@ -69,35 +73,40 @@ function LoginForm() {
               padding: '0 1em'
             }}
           >
-            {/* <Alert
-              severity='success'
-              sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}
-            >
-              Your email&nbsp;
-              <Typography
-                variant='span'
-                sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}
+            {verifiedEmail && (
+              <Alert
+                severity='success'
+                sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}
               >
-                trungquandev@gmail.com
-              </Typography>
-              &nbsp;has been verified.
-              <br />
-              Now you can login to enjoy our services! Have a good day!
-            </Alert>
-            <Alert
-              severity='info'
-              sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}
-            >
-              An email has been sent to&nbsp;
-              <Typography
-                variant='span'
-                sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}
+                Your email&nbsp;
+                <Typography
+                  variant='span'
+                  sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}
+                >
+                  {verifiedEmail}
+                </Typography>
+                &nbsp;has been verified.
+                <br />
+                Now you can login to enjoy our services! Have a good day!
+              </Alert>
+            )}
+
+            {registeredEmail && (
+              <Alert
+                severity='info'
+                sx={{ '.MuiAlert-message': { overflow: 'hidden' } }}
               >
-                trungquandev@gmail.com
-              </Typography>
-              <br />
-              Please check and verify your account before logging in!
-            </Alert> */}
+                An email has been sent to&nbsp;
+                <Typography
+                  variant='span'
+                  sx={{ fontWeight: 'bold', '&:hover': { color: '#fdba26' } }}
+                >
+                  {registeredEmail}
+                </Typography>
+                <br />
+                Please check and verify your account before logging in!
+              </Alert>
+            )}
           </Box>
           <Box sx={{ padding: '0 1em 1em 1em' }}>
             <Box sx={{ marginTop: '1em' }}>
