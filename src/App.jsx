@@ -1,10 +1,23 @@
-import { Route, Routes, Navigate } from 'react-router-dom'
+import { Route, Routes, Navigate, Outlet } from 'react-router-dom'
 import Board from '~/pages/Boards/_id'
 import NotFound from '~/pages/404/NotFound'
 import Auth from '~/pages/Auth/Auth'
 import AccountVerification from '~/pages/Auth/AccountVerification'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser } from '~/redux/user/userSlice'
+
+/**
+ * Giải pháp Clean code trong việc xác định các rout nào cần login mới cho truy cập
+ *  sử dụng <Outlet /> của react-route-dom để hiển thị các Child route
+ */
+const ProtectedRoute = ({ user }) => {
+  if (!user) return <Navigate to='/login' replace={true} />
+  return <Outlet />
+}
 
 function App() {
+  const currentUser = useSelector(selectCurrentUser)
+
   return (
     <Routes>
       {/* Redirect Route */}
@@ -15,8 +28,12 @@ function App() {
           <Navigate to={'/boards/6812c78b8fbd39624638ddbf'} replace={true} />
         }
       />
-      {/* Board Details */}
-      <Route path='/boards/:boardId' element={<Board />} />
+      {/* ProtectedRoute là những route chỉ cho truy cập sau khi login */}
+      <Route element={<ProtectedRoute user={currentUser} />}>
+        {/* <Outlet /> của react-route-dom sẽ chạy vào các Child route*/}
+        {/* Board Details */}
+        <Route path='/boards/:boardId' element={<Board />} />
+      </Route>
 
       {/* Authentication */}
       <Route path='/login' element={<Auth />} />
