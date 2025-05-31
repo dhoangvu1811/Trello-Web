@@ -4,7 +4,7 @@ import Button from '@mui/material/Button'
 import Avatar from '@mui/material/Avatar'
 import LockIcon from '@mui/icons-material/Lock'
 import Typography from '@mui/material/Typography'
-import { Card as MuiCard } from '@mui/material'
+import { IconButton, InputAdornment, Card as MuiCard } from '@mui/material'
 import { ReactComponent as TrelloIcon } from '~/assets/trello.svg'
 import CardActions from '@mui/material/CardActions'
 import TextField from '@mui/material/TextField'
@@ -22,6 +22,8 @@ import FieldErrorAlert from '~/components/Form/FieldErrorAlert'
 import { useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
 import { loginUserAPI } from '~/redux/user/userSlice'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { useState } from 'react'
 
 function LoginForm() {
   const dispatch = useDispatch()
@@ -47,6 +49,18 @@ function LoginForm() {
         //Đoạn này sẽ kiểm tra nếu như không có lỗi thi chuyển hướng về route /
         if (!res.error) navigate('/')
       })
+  }
+
+  const [showPassword, setShowPassword] = useState(false)
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show)
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault()
+  }
+
+  const handleMouseUpPassword = (event) => {
+    event.preventDefault()
   }
 
   return (
@@ -146,7 +160,7 @@ function LoginForm() {
               <TextField
                 fullWidth
                 label='Enter Password...'
-                type='password'
+                type={showPassword ? 'text' : 'password'}
                 variant='outlined'
                 error={!!errors['password']}
                 {...register('password', {
@@ -156,6 +170,25 @@ function LoginForm() {
                     message: PASSWORD_RULE_MESSAGE
                   }
                 })}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton
+                        aria-label={
+                          showPassword
+                            ? 'hide the password'
+                            : 'display the password'
+                        }
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        onMouseUp={handleMouseUpPassword}
+                        edge='end'
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
               />
               <FieldErrorAlert errors={errors} fieldName={'password'} />
             </Box>
