@@ -4,7 +4,7 @@ import Button from '@mui/material/Button'
 import Avatar from '@mui/material/Avatar'
 import LockIcon from '@mui/icons-material/Lock'
 import Typography from '@mui/material/Typography'
-import { Card as MuiCard } from '@mui/material'
+import { IconButton, InputAdornment, Card as MuiCard } from '@mui/material'
 import { ReactComponent as TrelloIcon } from '~/assets/trello.svg'
 import CardActions from '@mui/material/CardActions'
 import TextField from '@mui/material/TextField'
@@ -20,6 +20,8 @@ import {
 import FieldErrorAlert from '~/components/Form/FieldErrorAlert'
 import { registerUserAPI } from '~/apis'
 import { toast } from 'react-toastify'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { useState } from 'react'
 
 function RegisterForm() {
   const {
@@ -39,6 +41,21 @@ function RegisterForm() {
       .then((user) => {
         navigate(`/login?registeredEmail=${user.email}`)
       })
+  }
+
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show)
+  const handleClickShowPasswordConfirm = () =>
+    setShowPasswordConfirm((show) => !show)
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault()
+  }
+
+  const handleMouseUpPassword = (event) => {
+    event.preventDefault()
   }
 
   return (
@@ -94,7 +111,7 @@ function RegisterForm() {
               <TextField
                 fullWidth
                 label='Enter Password...'
-                type='password'
+                type={showPassword ? 'text' : 'password'}
                 variant='outlined'
                 error={!!errors['password']}
                 {...register('password', {
@@ -104,6 +121,25 @@ function RegisterForm() {
                     message: PASSWORD_RULE_MESSAGE
                   }
                 })}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton
+                        aria-label={
+                          showPassword
+                            ? 'hide the password'
+                            : 'display the password'
+                        }
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        onMouseUp={handleMouseUpPassword}
+                        edge='end'
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
               />
               <FieldErrorAlert errors={errors} fieldName={'password'} />
             </Box>
@@ -111,7 +147,7 @@ function RegisterForm() {
               <TextField
                 fullWidth
                 label='Enter Password Confirmation...'
-                type='password'
+                type={showPasswordConfirm ? 'text' : 'password'}
                 variant='outlined'
                 error={!!errors['password_confirmation']}
                 {...register('password_confirmation', {
@@ -120,6 +156,29 @@ function RegisterForm() {
                     return 'Password Confirmation does not match!'
                   }
                 })}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton
+                        aria-label={
+                          showPasswordConfirm
+                            ? 'hide the password'
+                            : 'display the password'
+                        }
+                        onClick={handleClickShowPasswordConfirm}
+                        onMouseDown={handleMouseDownPassword}
+                        onMouseUp={handleMouseUpPassword}
+                        edge='end'
+                      >
+                        {showPasswordConfirm ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
               />
               <FieldErrorAlert
                 errors={errors}
