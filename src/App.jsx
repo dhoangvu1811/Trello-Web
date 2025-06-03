@@ -27,7 +27,7 @@ function App() {
         path='/'
         element={
           // Ở đây replace có giá trị true để nó thay thế route /, có thể hiểu route / sẽ không còn nằm trong history của Browser
-          <Navigate to={'/boards/6812c78b8fbd39624638ddbf'} replace={true} />
+          <Navigate to={'/boards'} replace={true} />
         }
       />
       {/* ProtectedRoute là những route chỉ cho truy cập sau khi login */}
