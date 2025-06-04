@@ -1,4 +1,4 @@
-import { Avatar, AvatarGroup, Box, Button, Chip, Tooltip } from '@mui/material'
+import { Box, Button, Chip, Tooltip } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import VpnLockIcon from '@mui/icons-material/VpnLock'
 import AddToDriveIcon from '@mui/icons-material/AddToDrive'
@@ -6,6 +6,7 @@ import BoltIcon from '@mui/icons-material/Bolt'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { capitalizeFirstLetter } from '~/utils/formatters'
+import BoardUserGroup from './BoardUserGroup'
 
 const MENU_STYLES = {
   color: 'white',
@@ -98,46 +99,8 @@ function BoardBar({ board }) {
           Invite
         </Button>
 
-        <AvatarGroup
-          max={7}
-          sx={{
-            gap: '10px',
-            '& .MuiAvatar-root ': {
-              width: 34,
-              height: 34,
-              fontSize1: 16,
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              '&:first-of-type': { bgcolor: '#a4b0be' }
-            }
-          }}
-        >
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-          <Tooltip title='DHVDev'>
-            <Avatar alt='DHVDev' src='/static/images/avatar/1.jpg' />
-          </Tooltip>
-        </AvatarGroup>
+        {/* Xử lý hiển thị danh sách thành viên của board */}
+        <BoardUserGroup />
       </Box>
     </Box>
   )
