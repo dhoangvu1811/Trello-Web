@@ -7,6 +7,8 @@ import FilterListIcon from '@mui/icons-material/FilterList'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { capitalizeFirstLetter } from '~/utils/formatters'
 import BoardUserGroup from './BoardUserGroup'
+import { useSelector } from 'react-redux'
+import { selectCurrentActiveBoard } from '~/redux/activeBoard/activeBoardSlice'
 
 const MENU_STYLES = {
   color: 'white',
@@ -23,6 +25,8 @@ const MENU_STYLES = {
 }
 
 function BoardBar({ board }) {
+  const activeBoard = useSelector(selectCurrentActiveBoard)
+
   return (
     <Box
       sx={{
@@ -100,7 +104,7 @@ function BoardBar({ board }) {
         </Button>
 
         {/* Xử lý hiển thị danh sách thành viên của board */}
-        <BoardUserGroup />
+        <BoardUserGroup boardUsers={activeBoard?.FE_allUser} />
       </Box>
     </Box>
   )
