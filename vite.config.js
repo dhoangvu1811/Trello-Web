@@ -8,7 +8,24 @@ export default defineConfig({
   define: {
     'process.env': process.env
   },
-  plugins: [react(), svgr()],
+  optimizeDeps: {
+    include: [
+      '@emotion/react',
+      '@emotion/styled',
+      '@mui/material/Tooltip', // hoặc thêm các component bạn dùng như Autocomplete, Popper
+      '@mui/material/Autocomplete',
+      '@mui/base/Popper' // fix lỗi từ Popper nếu cần
+    ]
+  },
+  plugins: [
+    react({
+      jsxImportSource: '@emotion/react',
+      babel: {
+        plugins: ['@emotion/babel-plugin']
+      }
+    }),
+    svgr()
+  ],
   // base: './'
   resolve: {
     alias: [{ find: '~', replacement: '/src' }]
