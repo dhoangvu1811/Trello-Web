@@ -3,6 +3,7 @@ import {
   CardActions,
   CardContent,
   CardMedia,
+  Tooltip,
   Typography
 } from '@mui/material'
 import { Card as MuiCard } from '@mui/material'
@@ -12,7 +13,10 @@ import AttachmentIcon from '@mui/icons-material/Attachment'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useDispatch } from 'react-redux'
-import { updateCurrentActiveCard } from '~/redux/activeCard/activeCardSlice'
+import {
+  showModalActiveCard,
+  updateCurrentActiveCard
+} from '~/redux/activeCard/activeCardSlice'
 
 function Card({ card }) {
   const dispatch = useDispatch()
@@ -45,6 +49,7 @@ function Card({ card }) {
 
   const setActiveCard = () => {
     dispatch(updateCurrentActiveCard(card))
+    dispatch(showModalActiveCard())
   }
 
   return (
@@ -77,9 +82,11 @@ function Card({ card }) {
           )}
 
           {!!card?.comments?.length && (
-            <Button size='small' startIcon={<CommentIcon />}>
-              {card?.memberIds?.length}
-            </Button>
+            <Tooltip title={'comment'}>
+              <Button size='small' startIcon={<CommentIcon />}>
+                {card?.comments?.length}
+              </Button>
+            </Tooltip>
           )}
 
           {!!card?.attachments?.length && (
