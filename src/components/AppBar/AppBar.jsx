@@ -1,5 +1,4 @@
 import {
-  Badge,
   Box,
   Button,
   InputAdornment,
@@ -15,7 +14,6 @@ import Workspaces from './Menus/Workspaces'
 import Recent from './Menus/Recent'
 import Starred from './Menus/Starred'
 import Templates from './Menus/Templates'
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import Profiles from './Menus/Profiles'
 import LibraryAddIcon from '@mui/icons-material/LibraryAdd'
@@ -23,6 +21,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import CloseIcon from '@mui/icons-material/Close'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Notifications from './Notifications/Notifications'
 
 function AppBar() {
   const [searchValue, setSearchValue] = useState('')
@@ -153,12 +152,13 @@ function AppBar() {
             }
           }}
         />
+
+        {/* Dark - Light System mode */}
         <ModeSelect />
-        <Tooltip title='Notifications'>
-          <Badge color='warning' variant='dot' sx={{ cursor: 'pointer' }}>
-            <NotificationsNoneIcon sx={{ color: 'white' }} />
-          </Badge>
-        </Tooltip>
+
+        {/* Xử lý hiển thị các thông báo */}
+        <Notifications />
+
         <Tooltip title='Help'>
           <HelpOutlineIcon sx={{ cursor: 'pointer', color: 'white' }} />
         </Tooltip>
