@@ -10,11 +10,14 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [
+      // '@emotion/react',
+      // '@emotion/styled',
+      // '@mui/material/Tooltip', // hoặc thêm các component bạn dùng như Autocomplete, Popper
+      // '@mui/material/Autocomplete',
+      // '@mui/base/Popper' // fix lỗi từ Popper nếu cần
+      '@mui/material',
       '@emotion/react',
-      '@emotion/styled',
-      '@mui/material/Tooltip', // hoặc thêm các component bạn dùng như Autocomplete, Popper
-      '@mui/material/Autocomplete',
-      '@mui/base/Popper' // fix lỗi từ Popper nếu cần
+      '@emotion/styled'
     ]
   },
   plugins: [
