@@ -29,7 +29,7 @@ export default defineConfig({
     }),
     svgr()
   ],
-  // base: './'
+  // base: '/',
   resolve: {
     alias: [{ find: '~', replacement: '/src' }]
   }
