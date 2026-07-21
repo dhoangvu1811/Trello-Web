@@ -58,6 +58,7 @@ function Card({ card, canEdit }) {
 
   return (
     <MuiCard
+      data-testid={`card-${card._id}`}
       onClick={setActiveCard}
       ref={setNodeRef}
       style={dndKitCardStyles}

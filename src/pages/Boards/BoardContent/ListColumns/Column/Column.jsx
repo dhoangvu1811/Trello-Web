@@ -166,7 +166,12 @@ function Column({ column, canEdit }) {
 
   // Phải bọc div ngoài cùng vì vấn đề chiều cao của column khi kéo thả sẽ có bug kiểu flickering
   return (
-    <div ref={setNodeRef} style={dndKitColumnStyles} {...attributes}>
+    <div
+      data-testid={`column-${column._id}`}
+      ref={setNodeRef}
+      style={dndKitColumnStyles}
+      {...attributes}
+    >
       {/* Box Column 01 */}
       <Box
         {...listeners}
