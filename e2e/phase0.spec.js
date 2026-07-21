@@ -52,7 +52,7 @@ const login = async (page, email) => {
   ])
 }
 
-test.beforeAll(seed)
+test.beforeEach(seed)
 test.afterAll(cleanup)
 
 test('owner can log in, move a card, invite a viewer, and inspect activity', async ({ page }) => {
@@ -101,8 +101,59 @@ test('owner can log in, move a card, invite a viewer, and inspect activity', asy
   await expect(page.getByText('invited a board member')).toBeVisible()
 })
 
+test('synchronizes board changes between two active users without reloading', async ({ browser }) => {
+  const ownerContext = await browser.newContext()
+  const viewerContext = await browser.newContext()
+  const ownerPage = await ownerContext.newPage()
+  const viewerPage = await viewerContext.newPage()
+
+  try {
+    await Promise.all([
+      login(ownerPage, 'owner@phase0.test'),
+      login(viewerPage, 'viewer@phase0.test')
+    ])
+    await Promise.all([
+      ownerPage.goto(`/boards/${boardId}`),
+      viewerPage.goto(`/boards/${boardId}`)
+    ])
+
+    const ownerCard = ownerPage.getByTestId(`card-${cardId}`)
+    const ownerTargetColumn = ownerPage.getByTestId(`column-${doneId}`)
+    await expect(
+      viewerPage.getByTestId(`column-${backlogId}`).getByTestId(`card-${cardId}`)
+    ).toBeVisible()
+
+    const moveResponse = ownerPage.waitForResponse(
+      (response) =>
+        response.url().includes('/boards/supports/moving_card') &&
+        response.status() === 200
+    )
+    const cardBox = await ownerCard.boundingBox()
+    const targetBox = await ownerTargetColumn.boundingBox()
+    if (!cardBox || !targetBox) throw new Error('Drag targets are not visible.')
+    await ownerPage.mouse.move(
+      cardBox.x + cardBox.width / 2,
+      cardBox.y + cardBox.height / 2
+    )
+    await ownerPage.mouse.down()
+    await ownerPage.mouse.move(
+      targetBox.x + targetBox.width / 2,
+      targetBox.y + targetBox.height / 2,
+      { steps: 12 }
+    )
+    await ownerPage.mouse.up()
+    await moveResponse
+
+    await expect(
+      viewerPage.getByTestId(`column-${doneId}`).getByTestId(`card-${cardId}`)
+    ).toBeVisible()
+  } finally {
+    await ownerContext.close()
+    await viewerContext.close()
+  }
+})
+
 test('viewer sees the board but cannot mutate or drag its content', async ({ page }) => {
-  seed()
   await login(page, 'viewer@phase0.test')
   await page.goto(`/boards/${boardId}`)
   await expect(page.getByTestId(`column-${backlogId}`)).toBeVisible()

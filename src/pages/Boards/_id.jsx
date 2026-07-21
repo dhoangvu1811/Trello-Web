@@ -20,6 +20,10 @@ import PageLoadingSpinner from '~/components/Loading/PageLoadingSpinner'
 import ActiveCard from '~/components/Modal/ActiveCard/ActiveCard'
 import { socketIoInstance } from '~/socketClient'
 import { canEditBoardContent } from '~/utils/boardPermissions'
+import {
+  BOARD_UPDATED_EVENT,
+  createBoardRefreshHandler
+} from '~/realtime/boardRealtime'
 
 function Board() {
   const dispatch = useDispatch()
@@ -36,11 +40,18 @@ function Board() {
     const joinBoardRoom = () => {
       socketIoInstance.emit('FE_JOIN_BOARD', boardId)
     }
+    const { handleBoardUpdated, dispose } = createBoardRefreshHandler({
+      boardId,
+      refreshBoard: () => dispatch(fetchBoardDetailsAPI(boardId))
+    })
 
     joinBoardRoom()
     socketIoInstance.on('connect', joinBoardRoom)
+    socketIoInstance.on(BOARD_UPDATED_EVENT, handleBoardUpdated)
     return () => {
       socketIoInstance.off('connect', joinBoardRoom)
+      socketIoInstance.off(BOARD_UPDATED_EVENT, handleBoardUpdated)
+      dispose()
       socketIoInstance.emit('FE_LEAVE_BOARD', boardId)
     }
   }, [dispatch, boardId])
