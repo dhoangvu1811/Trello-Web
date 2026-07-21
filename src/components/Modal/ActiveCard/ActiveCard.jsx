@@ -41,9 +41,13 @@ import {
   updateCurrentActiveCard
 } from '~/redux/activeCard/activeCardSlice'
 import { updateCardDetailsAPI } from '~/apis'
-import { updateCardInBoard } from '~/redux/activeBoard/activeBoardSlice'
+import {
+  selectCurrentActiveBoard,
+  updateCardInBoard
+} from '~/redux/activeBoard/activeBoardSlice'
 import { selectCurrentUser } from '~/redux/user/userSlice'
 import { CARD_MEMBER_ACTIONS } from '~/utils/constants'
+import { canEditBoardContent } from '~/utils/boardPermissions'
 const SidebarItem = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -72,7 +76,9 @@ function ActiveCard() {
   const dispatch = useDispatch()
   const currentUser = useSelector(selectCurrentUser)
   const activeCard = useSelector(selectCurrentActiveCard)
+  const activeBoard = useSelector(selectCurrentActiveBoard)
   const isShowModalActiveCard = useSelector(selectIsShowModalActiveCard)
+  const canEdit = canEditBoardContent(activeBoard?.currentUserRole)
   // const [isOpen, setIsOpen] = useState(true)
   // const handleOpenModal = () => setIsOpen(true)
 
@@ -211,6 +217,7 @@ function ActiveCard() {
             inputFontSize='22px'
             value={activeCard?.title}
             onChangedValue={onUpdateCardTitle}
+            disabled={!canEdit}
           />
         </Box>
 
@@ -228,6 +235,7 @@ function ActiveCard() {
               <CardUserGroup
                 cardMemberIds={activeCard?.memberIds}
                 onUpdateCardMembers={onUpdateCardMembers}
+                canEdit={canEdit}
               />
             </Box>
 
@@ -246,6 +254,7 @@ function ActiveCard() {
               <CardDescriptionMdEditor
                 cardDescriptionProp={activeCard?.description}
                 handleUpdateCardDesription={onUpdateCardDesription}
+                canEdit={canEdit}
               />
             </Box>
 
@@ -264,6 +273,7 @@ function ActiveCard() {
               <CardActivitySection
                 cardComments={activeCard?.comments}
                 onAddCardComment={onAddCardComment}
+                canComment={canEdit}
               />
             </Box>
           </Grid>
@@ -277,7 +287,7 @@ function ActiveCard() {
             </Typography>
             <Stack direction='column' spacing={1}>
               {/* Feature 05: Xử lý hành động bản thân user tự join vào card */}
-              <SidebarItem
+              {canEdit && <SidebarItem
                 className='active'
                 onClick={() => handleUpdateCardMember(currentUser?._id)}
               >
@@ -285,13 +295,13 @@ function ActiveCard() {
                 {activeCard?.memberIds?.includes(currentUser?._id)
                   ? 'Leave'
                   : 'Join'}
-              </SidebarItem>
+              </SidebarItem>}
               {/* Feature 06: Xử lý hành động cập nhật ảnh Cover của Card */}
-              <SidebarItem className='active' component='label'>
+              {canEdit && <SidebarItem className='active' component='label'>
                 <ImageOutlinedIcon fontSize='small' />
                 Cover
                 <VisuallyHiddenInput type='file' onChange={onUploadCardCover} />
-              </SidebarItem>
+              </SidebarItem>}
 
               <SidebarItem>
                 <AttachFileOutlinedIcon fontSize='small' />

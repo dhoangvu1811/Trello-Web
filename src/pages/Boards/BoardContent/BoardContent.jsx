@@ -30,6 +30,7 @@ const ACTIVE_DRAG_ITEM_TYPE = {
 
 function BoardContent({
   board,
+  canEdit,
   moveColumn,
   moveCardsInTheSameColumn,
   moveCardToDifferentColumn
@@ -175,6 +176,7 @@ function BoardContent({
   }
 
   const handleDragStart = (event) => {
+    if (!canEdit) return
     // console.log('handleDragStart', event)
     setActiveDragItemId(event?.active?.id)
     setActiveDragItemType(
@@ -192,6 +194,7 @@ function BoardContent({
 
   // Trigger trong quá trính Drag phần tử
   const handleDragOver = (event) => {
+    if (!canEdit) return
     if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
       return
     }
@@ -230,6 +233,7 @@ function BoardContent({
   }
 
   const handleDragEnd = (event) => {
+    if (!canEdit) return
     // console.log('handleDragEnd', event)
 
     const { active, over } = event
@@ -400,7 +404,7 @@ function BoardContent({
   return (
     <DndContext
       // Cảm biến
-      sensors={sensors}
+      sensors={canEdit ? sensors : []}
       //Thuật toán phát hiện va chạm (Nếu không có nó thì card với cover lớn sẽ không kéo qua column khác được vì bị conflict giữa card và column)
 
       // collisionDetection={closestCorners}
@@ -418,14 +422,14 @@ function BoardContent({
           p: '10px 0'
         }}
       >
-        <ListColumns columns={orderedColumns} />
+        <ListColumns columns={orderedColumns} canEdit={canEdit} />
         <DragOverlay dropAnimation={customDropAnimation}>
           {!activeDragItemType && null}
           {activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN && (
-            <Column column={activeDragItemData} />
+            <Column column={activeDragItemData} canEdit={canEdit} />
           )}
           {activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD && (
-            <Card card={activeDragItemData} />
+            <Card card={activeDragItemData} canEdit={canEdit} />
           )}
         </DragOverlay>
       </Box>

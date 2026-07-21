@@ -19,6 +19,7 @@ import { useParams } from 'react-router-dom'
 import PageLoadingSpinner from '~/components/Loading/PageLoadingSpinner'
 import ActiveCard from '~/components/Modal/ActiveCard/ActiveCard'
 import { socketIoInstance } from '~/socketClient'
+import { canEditBoardContent } from '~/utils/boardPermissions'
 
 function Board() {
   const dispatch = useDispatch()
@@ -26,6 +27,7 @@ function Board() {
   const board = useSelector(selectCurrentActiveBoard)
 
   const { boardId } = useParams()
+  const canEdit = canEditBoardContent(board?.currentUserRole)
 
   useEffect(() => {
     // Call Api
@@ -133,6 +135,7 @@ function Board() {
       <BoardBar board={board} />
       <BoardContent
         board={board}
+        canEdit={canEdit}
         // 3 trường hợp move dưới đây thì giữ nguyên để code ở boardContent không quá dài mất kiểm soát khic đọc code
         moveColumn={moveColumn}
         moveCardsInTheSameColumn={moveCardsInTheSameColumn}

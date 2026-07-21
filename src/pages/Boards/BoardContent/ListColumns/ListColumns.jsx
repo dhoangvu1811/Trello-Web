@@ -17,7 +17,7 @@ import {
   updateCurrentActiveBoard
 } from '~/redux/activeBoard/activeBoardSlice'
 
-function ListColumns({ columns }) {
+function ListColumns({ columns, canEdit }) {
   const dispatch = useDispatch()
   //Không dùng state của component mà chuyển sang dùng state của redux
   const board = useSelector(selectCurrentActiveBoard)
@@ -94,11 +94,11 @@ function ListColumns({ columns }) {
         }}
       >
         {columns?.map((column) => {
-          return <Column key={column._id} column={column} />
+          return <Column key={column._id} column={column} canEdit={canEdit} />
         })}
 
         {/* Box add new column */}
-        {!openNewColumnForm ? (
+        {canEdit && (!openNewColumnForm ? (
           <Box
             onClick={toggleOpenNewColumnForm}
             sx={{
@@ -191,7 +191,7 @@ function ListColumns({ columns }) {
               />
             </Box>
           </Box>
-        )}
+        ))}
       </Box>
     </SortableContext>
   )

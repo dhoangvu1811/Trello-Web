@@ -8,7 +8,11 @@ import Tooltip from '@mui/material/Tooltip'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '~/redux/user/userSlice'
 
-function CardActivitySection({ cardComments = [], onAddCardComment }) {
+function CardActivitySection({
+  cardComments = [],
+  onAddCardComment,
+  canComment
+}) {
   const currentUser = useSelector(selectCurrentUser)
 
   const handleAddCardComment = (event) => {
@@ -31,7 +35,7 @@ function CardActivitySection({ cardComments = [], onAddCardComment }) {
   return (
     <Box sx={{ mt: 2 }}>
       {/* Xử lý thêm comment vào Card */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+      {canComment && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <Avatar
           sx={{ width: 36, height: 36, cursor: 'pointer' }}
           alt={currentUser?.displayName}
@@ -45,7 +49,7 @@ function CardActivitySection({ cardComments = [], onAddCardComment }) {
           multiline
           onKeyDown={handleAddCardComment}
         />
-      </Box>
+      </Box>}
 
       {/* Hiển thị danh sách các comments */}
       {cardComments.length === 0 && (

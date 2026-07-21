@@ -54,6 +54,22 @@ export const activeBoardSlice = createSlice({
           })
         }
       }
+    },
+    updateBoardMemberRole: (state, action) => {
+      const { memberId, role } = action.payload
+      const member = state.currentActiveBoard.members.find(
+        (user) => user._id === memberId
+      )
+      const allUserMember = state.currentActiveBoard.FE_allUser.find(
+        (user) => user._id === memberId
+      )
+
+      if (!member || !allUserMember) {
+        throw new Error('Updated board member is missing from active board state.')
+      }
+
+      member.boardRole = role
+      allUserMember.boardRole = role
     }
   },
   // extraReducers: Nơi xử lý dữ liệu bất đồng bộ
@@ -89,8 +105,11 @@ export const activeBoardSlice = createSlice({
 })
 
 // Action là nơi dành cho các component bên dưới gọi bằng dispatch() tới nó để cập nhật lại dữ liệu thông qua reducer (chạy đồng bộ)
-export const { updateCurrentActiveBoard, updateCardInBoard } =
-  activeBoardSlice.actions
+export const {
+  updateCurrentActiveBoard,
+  updateCardInBoard,
+  updateBoardMemberRole
+} = activeBoardSlice.actions
 
 //Selectors: là nơi dành cho các component bên dưới gọi bằng hook useSelector() để lấy dữ liệu từ trong kho redux store ra dùng
 export const selectCurrentActiveBoard = (state) => {
