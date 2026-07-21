@@ -12,6 +12,7 @@
     "dev": "cross-env BUILD_MODE=dev vite --host",
     "build": "cross-env BUILD_MODE=production vite build --base=/",
     "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "test": "node --test",
     "preview": "vite preview"
   },
   "dependencies": {
