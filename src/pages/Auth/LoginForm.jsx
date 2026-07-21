@@ -205,6 +205,14 @@ function LoginForm() {
               Login
             </Button>
           </CardActions>
+          <Box sx={{ px: '1em', pb: 1, textAlign: 'center' }}>
+            <Link
+              to='/account/forgot-password'
+              style={{ textDecoration: 'none' }}
+            >
+              <Typography color='primary'>Forgot password?</Typography>
+            </Link>
+          </Box>
           <Box sx={{ padding: '0 1em 1em 1em', textAlign: 'center' }}>
             <Typography>New to Trello MERN Stack Advanced?</Typography>
             <Link to='/register' style={{ textDecoration: 'none' }}>

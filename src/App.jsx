@@ -9,6 +9,7 @@ import { selectCurrentUser } from '~/redux/user/userSlice'
 import Settings from './pages/Settings/Settings'
 import Boards from './pages/Boards'
 import { socketIoInstance } from '~/socketClient'
+import PasswordRecovery from '~/pages/Auth/PasswordRecovery'
 
 /**
  * Giải pháp Clean code trong việc xác định các rout nào cần login mới cho truy cập
@@ -56,6 +57,8 @@ function App() {
       <Route path='/login' element={<Auth />} />
       <Route path='/register' element={<Auth />} />
       <Route path='/account/verification' element={<AccountVerification />} />
+      <Route path='/account/forgot-password' element={<PasswordRecovery />} />
+      <Route path='/account/reset-password' element={<PasswordRecovery />} />
 
       {/* 404 not found page */}
       <Route path='*' element={<NotFound />} />

@@ -9,6 +9,7 @@ import BoardUserGroup from './BoardUserGroup'
 import { useSelector } from 'react-redux'
 import { selectCurrentActiveBoard } from '~/redux/activeBoard/activeBoardSlice'
 import InviteBoardUser from './InviteBoardUser'
+import { BOARD_ROLES } from '~/utils/constants'
 
 const MENU_STYLES = {
   color: 'white',
@@ -26,6 +27,9 @@ const MENU_STYLES = {
 
 function BoardBar({ board }) {
   const activeBoard = useSelector(selectCurrentActiveBoard)
+  const canInvite = [BOARD_ROLES.OWNER, BOARD_ROLES.ADMIN].includes(
+    board.currentUserRole
+  )
 
   return (
     <Box
@@ -92,7 +96,7 @@ function BoardBar({ board }) {
         }}
       >
         {/* Xử lý mời user vào làm thành viên của board*/}
-        <InviteBoardUser boardId={board._id} />
+        {canInvite && <InviteBoardUser boardId={board._id} />}
 
         {/* Xử lý hiển thị danh sách thành viên của board */}
         <BoardUserGroup boardUsers={activeBoard?.FE_allUser} />
