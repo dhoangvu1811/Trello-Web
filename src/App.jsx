@@ -1,4 +1,5 @@
 import { Route, Routes, Navigate, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
 import Board from '~/pages/Boards/_id'
 import NotFound from '~/pages/404/NotFound'
 import Auth from '~/pages/Auth/Auth'
@@ -7,6 +8,7 @@ import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '~/redux/user/userSlice'
 import Settings from './pages/Settings/Settings'
 import Boards from './pages/Boards'
+import { socketIoInstance } from '~/socketClient'
 
 /**
  * Giải pháp Clean code trong việc xác định các rout nào cần login mới cho truy cập
@@ -19,6 +21,14 @@ const ProtectedRoute = ({ user }) => {
 
 function App() {
   const currentUser = useSelector(selectCurrentUser)
+
+  useEffect(() => {
+    if (currentUser) {
+      socketIoInstance.connect()
+    } else {
+      socketIoInstance.disconnect()
+    }
+  }, [currentUser])
 
   return (
     <Routes>

@@ -18,6 +18,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import PageLoadingSpinner from '~/components/Loading/PageLoadingSpinner'
 import ActiveCard from '~/components/Modal/ActiveCard/ActiveCard'
+import { socketIoInstance } from '~/socketClient'
 
 function Board() {
   const dispatch = useDispatch()
@@ -29,6 +30,11 @@ function Board() {
   useEffect(() => {
     // Call Api
     dispatch(fetchBoardDetailsAPI(boardId))
+
+    socketIoInstance.emit('FE_JOIN_BOARD', boardId)
+    return () => {
+      socketIoInstance.emit('FE_LEAVE_BOARD', boardId)
+    }
   }, [dispatch, boardId])
 
   /* Gọi Api và xử lý kéo thả column
