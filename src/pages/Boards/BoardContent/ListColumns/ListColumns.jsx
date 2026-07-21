@@ -73,7 +73,7 @@ function ListColumns({ columns }) {
     setNewColumnTitle('')
   }
 
-  /* SortableContext yêu cầu items là một mảng dạng ['id-1','id-2'] chứ không phải [{id:'id-01'},{id:'id-01'}] 
+  /* SortableContext yêu cầu items là một mảng dạng ['id-1','id-2'] chứ không phải [{id:'id-01'},{id:'id-01'}]
   Nếu không đúng thì vẫn kéo thả được nhưng không có animation
   */
 
