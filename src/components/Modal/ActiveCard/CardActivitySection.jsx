@@ -17,10 +17,7 @@ function CardActivitySection({ cardComments = [], onAddCardComment }) {
       event.preventDefault() // Thêm dòng này để khi Enter không bị nhảy dòng
       if (!event.target?.value) return // Nếu không có giá trị gì thì return không làm gì cả
 
-      // Tạo một biến commend data để gửi api
       const commentToAdd = {
-        userAvatar: currentUser?.avatar,
-        userDisplayName: currentUser?.displayName,
         content: event.target.value.trim()
       }
 
