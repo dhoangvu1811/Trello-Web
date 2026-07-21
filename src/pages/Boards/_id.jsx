@@ -33,8 +33,14 @@ function Board() {
     // Call Api
     dispatch(fetchBoardDetailsAPI(boardId))
 
-    socketIoInstance.emit('FE_JOIN_BOARD', boardId)
+    const joinBoardRoom = () => {
+      socketIoInstance.emit('FE_JOIN_BOARD', boardId)
+    }
+
+    joinBoardRoom()
+    socketIoInstance.on('connect', joinBoardRoom)
     return () => {
+      socketIoInstance.off('connect', joinBoardRoom)
       socketIoInstance.emit('FE_LEAVE_BOARD', boardId)
     }
   }, [dispatch, boardId])
