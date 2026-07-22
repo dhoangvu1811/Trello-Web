@@ -81,8 +81,11 @@ authorizedAxiosInstance.interceptors.response.use(
     interceptorLoadingElements(false)
 
     /* Xử lý Refresh Token tự động */
-    // Trường hợp 1: Nếu như nhận mã 401 từ BE, thì sẽ gọi API đăng xuất luôn
-    if (error.response?.status === 401) {
+    // Session bootstrap handles its own 401 so an older lookup cannot clear a newer login.
+    if (
+      error.response?.status === 401 &&
+      !error.config?.skipSessionClear
+    ) {
       clearLocalSession()
     }
 

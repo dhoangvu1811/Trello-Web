@@ -11,7 +11,8 @@ const initialState = {
   currentUser: null,
   accessTokenExpiresAt: null,
   sessionExpiresAt: null,
-  initialized: false
+  initialized: false,
+  sessionRequestId: null
 }
 
 //Các hành động gọi api (bất đồng bộ) và cập nhật dữ liệu vào redux, dùng middlaware createAsyncThunk đi kèm với extraReducers
@@ -46,7 +47,7 @@ export const fetchSessionAPI = createAsyncThunk(
   async () => {
     const response = await authorizedAxiosInstance.get(
       `${API_ROOT}/v1/users/session`,
-      { skipAuthErrorToast: true }
+      { skipAuthErrorToast: true, skipSessionClear: true }
     )
     return response.data
   }
@@ -79,6 +80,7 @@ export const userSlice = createSlice({
       state.accessTokenExpiresAt = null
       state.sessionExpiresAt = null
       state.initialized = true
+      state.sessionRequestId = null
     },
     updateTokenMetadata: (state, action) => {
       state.accessTokenExpiresAt = action.payload.accessTokenExpiresAt
@@ -93,12 +95,15 @@ export const userSlice = createSlice({
       state.accessTokenExpiresAt = action.payload.accessTokenExpiresAt
       state.sessionExpiresAt = action.payload.sessionExpiresAt
       state.initialized = true
+      // A session lookup started before login must not overwrite this newer session.
+      state.sessionRequestId = null
     })
     builder.addCase(logoutUserAPI.pending, (state) => {
       state.currentUser = null
       state.accessTokenExpiresAt = null
       state.sessionExpiresAt = null
       state.initialized = true
+      state.sessionRequestId = null
     })
     builder.addCase(logoutUserAPI.fulfilled, (state) => {
       /**
@@ -115,20 +120,25 @@ export const userSlice = createSlice({
       state.sessionExpiresAt = null
       state.initialized = true
     })
-    builder.addCase(fetchSessionAPI.pending, (state) => {
+    builder.addCase(fetchSessionAPI.pending, (state, action) => {
       state.initialized = false
+      state.sessionRequestId = action.meta.requestId
     })
     builder.addCase(fetchSessionAPI.fulfilled, (state, action) => {
+      if (state.sessionRequestId !== action.meta.requestId) return
       state.currentUser = action.payload.user
       state.accessTokenExpiresAt = action.payload.accessTokenExpiresAt
       state.sessionExpiresAt = action.payload.sessionExpiresAt
       state.initialized = true
+      state.sessionRequestId = null
     })
-    builder.addCase(fetchSessionAPI.rejected, (state) => {
+    builder.addCase(fetchSessionAPI.rejected, (state, action) => {
+      if (state.sessionRequestId !== action.meta.requestId) return
       state.currentUser = null
       state.accessTokenExpiresAt = null
       state.sessionExpiresAt = null
       state.initialized = true
+      state.sessionRequestId = null
     })
     builder.addCase(refreshSessionAPI.rejected, (state) => {
       state.currentUser = null

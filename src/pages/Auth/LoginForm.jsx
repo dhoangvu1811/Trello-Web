@@ -38,17 +38,16 @@ function LoginForm() {
     ...searchParams
   ])
 
-  const submitLogIn = (data) => {
+  const submitLogIn = async (data) => {
     const { email, password } = data
-    toast
-      .promise(dispatch(loginUserAPI({ email, password })), {
+    try {
+      await toast.promise(dispatch(loginUserAPI({ email, password })).unwrap(), {
         pending: 'Logging in...'
       })
-      .then((res) => {
-        // console.log('🚀 ~ submitLogIn ~ res:', res)
-        //Đoạn này sẽ kiểm tra nếu như không có lỗi thi chuyển hướng về route /
-        if (!res.error) navigate('/')
-      })
+      navigate('/boards', { replace: true })
+    } catch {
+      // The shared Axios interceptor presents the API error to the user.
+    }
   }
 
   const [showPassword, setShowPassword] = useState(false)

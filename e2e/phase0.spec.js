@@ -114,6 +114,16 @@ test('logs out locally and returns to login', async ({ page }) => {
   await expect(page).toHaveURL('/login')
 })
 
+test('keeps a successful login after restoring the browser session', async ({ page }) => {
+  await login(page, 'owner@phase0.test')
+  await expect(page.getByText('Phase Zero E2E Board')).toBeVisible()
+
+  await page.reload()
+
+  await expect(page).toHaveURL('/boards')
+  await expect(page.getByText('Phase Zero E2E Board')).toBeVisible()
+})
+
 test('synchronizes board changes between two active users without reloading', async ({ browser }) => {
   const ownerContext = await browser.newContext()
   const viewerContext = await browser.newContext()
