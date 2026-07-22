@@ -114,7 +114,26 @@ test('logs out locally and returns to login', async ({ page }) => {
   await expect(page).toHaveURL('/login')
 })
 
-test('keeps a successful login after restoring the browser session', async ({ page }) => {
+test('ignores legacy cookies and restores a successful login', async ({ page, context }) => {
+  await context.addCookies([
+    {
+      name: 'accessToken',
+      value: 'expired-legacy-access-token',
+      url: 'http://127.0.0.1:8017',
+      httpOnly: true,
+      secure: false,
+      sameSite: 'Lax'
+    },
+    {
+      name: 'refreshToken',
+      value: 'invalid-legacy-refresh-token',
+      url: 'http://127.0.0.1:8017',
+      httpOnly: true,
+      secure: false,
+      sameSite: 'Lax'
+    }
+  ])
+
   await login(page, 'owner@phase0.test')
   await expect(page.getByText('Phase Zero E2E Board')).toBeVisible()
 
