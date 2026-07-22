@@ -34,7 +34,7 @@ export default defineConfig({
         ...process.env,
         MONGODB_URI: process.env.MONGODB_TEST_URI,
         DATABASE_NAME: databaseName,
-        BUILD_MODE: 'production',
+        BUILD_MODE: 'test',
         HOST: '127.0.0.1',
         PORT: '8017',
         WEBSITE_DOMAIN: 'http://127.0.0.1:5173',
