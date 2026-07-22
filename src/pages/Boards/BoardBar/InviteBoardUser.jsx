@@ -6,6 +6,7 @@ import Popover from '@mui/material/Popover'
 import Button from '@mui/material/Button'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
 import { useForm } from 'react-hook-form'
 import {
   EMAIL_RULE,
@@ -14,9 +15,10 @@ import {
 } from '~/utils/validators'
 import FieldErrorAlert from '~/components/Form/FieldErrorAlert'
 import { inviteUserToBoardAPI } from '~/apis'
-import { socketIoInstance } from '~/socketClient'
+import { BOARD_ROLES } from '~/utils/constants'
 
 function InviteBoardUser({ boardId }) {
+  const [role, setRole] = useState(BOARD_ROLES.MEMBER)
   /**
    * Xử lý Popover để ẩn hoặc hiện một popup nhỏ, tương tự docs để tham khảo ở đây:
    * https://mui.com/material-ui/react-popover/
@@ -39,13 +41,12 @@ function InviteBoardUser({ boardId }) {
     const { inviteeEmail } = data
 
     // Gọi API mời một người dùng nào đó làm thành viên của Board
-    inviteUserToBoardAPI({ inviteeEmail, boardId }).then((invitation) => {
+    inviteUserToBoardAPI({ inviteeEmail, boardId, role }).then(() => {
       // Clear thẻ input sử dụng react-hook-form bằng setValue
       setValue('inviteeEmail', null)
+      setRole(BOARD_ROLES.MEMBER)
       setAnchorPopoverElement(null)
 
-      // Mời một người dùng vào board xong thì sẽ gửi/emit sự kiện socket lên server (tính năng real time)
-      socketIoInstance.emit('FE_USER_INVITED_TO_BOARD', invitation)
     })
   }
 
@@ -109,6 +110,16 @@ function InviteBoardUser({ boardId }) {
               />
               <FieldErrorAlert errors={errors} fieldName={'inviteeEmail'} />
             </Box>
+            <TextField
+              select
+              fullWidth
+              label='Board role'
+              value={role}
+              onChange={(event) => setRole(event.target.value)}
+            >
+              <MenuItem value={BOARD_ROLES.MEMBER}>Member</MenuItem>
+              <MenuItem value={BOARD_ROLES.VIEWER}>Viewer</MenuItem>
+            </TextField>
 
             <Box sx={{ alignSelf: 'flex-end' }}>
               <Button

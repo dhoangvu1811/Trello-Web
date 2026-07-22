@@ -1,15 +1,16 @@
-import { Box, Button, Chip, Tooltip } from '@mui/material'
+import { Box, Chip, Tooltip } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import VpnLockIcon from '@mui/icons-material/VpnLock'
 import AddToDriveIcon from '@mui/icons-material/AddToDrive'
 import BoltIcon from '@mui/icons-material/Bolt'
 import FilterListIcon from '@mui/icons-material/FilterList'
-import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { capitalizeFirstLetter } from '~/utils/formatters'
 import BoardUserGroup from './BoardUserGroup'
 import { useSelector } from 'react-redux'
 import { selectCurrentActiveBoard } from '~/redux/activeBoard/activeBoardSlice'
 import InviteBoardUser from './InviteBoardUser'
+import BoardActivityDrawer from './BoardActivityDrawer'
+import { canManageBoard } from '~/utils/boardPermissions'
 
 const MENU_STYLES = {
   color: 'white',
@@ -27,6 +28,7 @@ const MENU_STYLES = {
 
 function BoardBar({ board }) {
   const activeBoard = useSelector(selectCurrentActiveBoard)
+  const canInvite = canManageBoard(board.currentUserRole)
 
   return (
     <Box
@@ -92,11 +94,17 @@ function BoardBar({ board }) {
           gap: 2
         }}
       >
+        <BoardActivityDrawer boardId={board._id} />
+
         {/* Xử lý mời user vào làm thành viên của board*/}
-        <InviteBoardUser boardId={board._id} />
+        {canInvite && <InviteBoardUser boardId={board._id} />}
 
         {/* Xử lý hiển thị danh sách thành viên của board */}
-        <BoardUserGroup boardUsers={activeBoard?.FE_allUser} />
+        <BoardUserGroup
+          boardUsers={activeBoard?.FE_allUser}
+          boardId={board._id}
+          currentUserRole={board.currentUserRole}
+        />
       </Box>
     </Box>
   )

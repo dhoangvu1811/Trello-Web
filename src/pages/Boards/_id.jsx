@@ -18,6 +18,12 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import PageLoadingSpinner from '~/components/Loading/PageLoadingSpinner'
 import ActiveCard from '~/components/Modal/ActiveCard/ActiveCard'
+import { socketIoInstance } from '~/socketClient'
+import { canEditBoardContent } from '~/utils/boardPermissions'
+import {
+  BOARD_UPDATED_EVENT,
+  createBoardRefreshHandler
+} from '~/realtime/boardRealtime'
 
 function Board() {
   const dispatch = useDispatch()
@@ -25,10 +31,29 @@ function Board() {
   const board = useSelector(selectCurrentActiveBoard)
 
   const { boardId } = useParams()
+  const canEdit = canEditBoardContent(board?.currentUserRole)
 
   useEffect(() => {
     // Call Api
     dispatch(fetchBoardDetailsAPI(boardId))
+
+    const joinBoardRoom = () => {
+      socketIoInstance.emit('FE_JOIN_BOARD', boardId)
+    }
+    const { handleBoardUpdated, dispose } = createBoardRefreshHandler({
+      boardId,
+      refreshBoard: () => dispatch(fetchBoardDetailsAPI(boardId))
+    })
+
+    joinBoardRoom()
+    socketIoInstance.on('connect', joinBoardRoom)
+    socketIoInstance.on(BOARD_UPDATED_EVENT, handleBoardUpdated)
+    return () => {
+      socketIoInstance.off('connect', joinBoardRoom)
+      socketIoInstance.off(BOARD_UPDATED_EVENT, handleBoardUpdated)
+      dispose()
+      socketIoInstance.emit('FE_LEAVE_BOARD', boardId)
+    }
   }, [dispatch, boardId])
 
   /* Gọi Api và xử lý kéo thả column
@@ -127,6 +152,7 @@ function Board() {
       <BoardBar board={board} />
       <BoardContent
         board={board}
+        canEdit={canEdit}
         // 3 trường hợp move dưới đây thì giữ nguyên để code ở boardContent không quá dài mất kiểm soát khic đọc code
         moveColumn={moveColumn}
         moveCardsInTheSameColumn={moveCardsInTheSameColumn}

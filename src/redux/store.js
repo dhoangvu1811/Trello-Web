@@ -13,7 +13,9 @@ import storage from 'redux-persist/lib/storage' //default là localstorage
 const rootPersistConfig = {
   key: 'root', // key của persist do chúng ta chỉ định cứ để mặc định là root
   storage: storage, // Lưu vào localstorage
-  whiteList: ['user'] // định nghĩa các slice ĐƯỢC PHÉP duy trì qua mỗi lần f5 trình duyệt
+  version: 2,
+  whitelist: [],
+  migrate: () => Promise.resolve(undefined)
   // blackList: ['user'] // định nghĩa các slice KHÔNG ĐƯỢC PHÉP duy trì qua mỗi lần f5 trình duyệt
 }
 

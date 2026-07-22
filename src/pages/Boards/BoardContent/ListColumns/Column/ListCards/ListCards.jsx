@@ -2,7 +2,7 @@ import { Box } from '@mui/material'
 import Card from './Card/Card'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
-function ListCards({ cards }) {
+function ListCards({ cards, canEdit }) {
   return (
     <SortableContext
       items={cards?.map((c) => c._id)}
@@ -34,7 +34,7 @@ function ListCards({ cards }) {
         }}
       >
         {cards?.map((card) => {
-          return <Card key={card._id} card={card} />
+          return <Card key={card._id} card={card} canEdit={canEdit} />
         })}
       </Box>
     </SortableContext>

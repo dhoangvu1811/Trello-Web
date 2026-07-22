@@ -1,4 +1,5 @@
 import { env } from '~/utils/environment'
+export { BOARD_ROLES } from '~/utils/boardRoles'
 
 export const API_ROOT = env.API_ROOT
 

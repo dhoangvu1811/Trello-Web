@@ -12,6 +12,8 @@
     "dev": "cross-env BUILD_MODE=dev vite --host",
     "build": "cross-env BUILD_MODE=production vite build --base=/",
     "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "test": "node --test",
+    "test:e2e": "cross-env VITE_API_ROOT=http://127.0.0.1:8017 vite build --base=/ && playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -42,6 +44,7 @@
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
+    "@playwright/test": "1.54.1",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@vitejs/plugin-react-swc": "^3.0.0",

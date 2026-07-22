@@ -18,7 +18,7 @@ import {
   updateCurrentActiveCard
 } from '~/redux/activeCard/activeCardSlice'
 
-function Card({ card }) {
+function Card({ card, canEdit }) {
   const dispatch = useDispatch()
 
   const {
@@ -28,7 +28,11 @@ function Card({ card }) {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: card._id, data: { ...card } })
+  } = useSortable({
+    id: card._id,
+    data: { ...card },
+    disabled: !canEdit
+  })
   const dndKitCardStyles = {
     // Nếu sử dụng CSS.Transform như docs sẽ lỗi kiểu stretch
     transform: CSS.Translate.toString(transform),
@@ -54,6 +58,7 @@ function Card({ card }) {
 
   return (
     <MuiCard
+      data-testid={`card-${card._id}`}
       onClick={setActiveCard}
       ref={setNodeRef}
       style={dndKitCardStyles}

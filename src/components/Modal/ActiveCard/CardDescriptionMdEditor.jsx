@@ -12,7 +12,8 @@ import EditNoteIcon from '@mui/icons-material/EditNote'
  */
 function CardDescriptionMdEditor({
   cardDescriptionProp,
-  handleUpdateCardDesription
+  handleUpdateCardDesription,
+  canEdit
 }) {
   // Lấy giá trị 'dark', 'light' hoặc 'system' mode từ MUI để support phần Markdown bên dưới: data-color-mode={mode}
   // https://www.npmjs.com/package/@uiw/react-md-editor#support-dark-modenight-mode
@@ -30,7 +31,7 @@ function CardDescriptionMdEditor({
 
   return (
     <Box sx={{ mt: -4 }}>
-      {markdownEditMode ? (
+      {markdownEditMode && canEdit ? (
         <Box sx={{ mt: 5, display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Box data-color-mode={mode}>
             <MDEditor
@@ -56,17 +57,19 @@ function CardDescriptionMdEditor({
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Button
-            sx={{ alignSelf: 'flex-end' }}
-            onClick={() => setMarkdownEditMode(true)}
-            type='button'
-            variant='contained'
-            color='info'
-            size='small'
-            startIcon={<EditNoteIcon />}
-          >
-            Edit
-          </Button>
+          {canEdit && (
+            <Button
+              sx={{ alignSelf: 'flex-end' }}
+              onClick={() => setMarkdownEditMode(true)}
+              type='button'
+              variant='contained'
+              color='info'
+              size='small'
+              startIcon={<EditNoteIcon />}
+            >
+              Edit
+            </Button>
+          )}
           <Box data-color-mode={mode}>
             <MDEditor.Markdown
               source={cardDescription}

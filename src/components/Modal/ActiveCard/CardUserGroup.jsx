@@ -10,7 +10,11 @@ import { useSelector } from 'react-redux'
 import { selectCurrentActiveBoard } from '~/redux/activeBoard/activeBoardSlice'
 import { CARD_MEMBER_ACTIONS } from '~/utils/constants'
 
-function CardUserGroup({ cardMemberIds = [], onUpdateCardMembers }) {
+function CardUserGroup({
+  cardMemberIds = [],
+  onUpdateCardMembers,
+  canEdit
+}) {
   /**
    * Xử lý Popover để ẩn hoặc hiện toàn bộ user trên một cái popup, tương tự docs để tham khảo ở đây:
    * https://mui.com/material-ui/react-popover/
@@ -33,9 +37,9 @@ function CardUserGroup({ cardMemberIds = [], onUpdateCardMembers }) {
   // const FE_cardMemers = board.FE_allUser?.filter((user) =>
   //   cardMemberIds.includes(user._id)
   // )
-  const FE_cardMemers = cardMemberIds.map((id) => {
-    return board.FE_allUser.find((u) => u._id === id)
-  })
+  const FE_cardMemers = cardMemberIds
+    .map((id) => board.FE_allUser.find((u) => u._id === id))
+    .filter(Boolean)
 
   const handleUpdateCardMembers = (user) => {
     // Tạo một biến incommingMemberInfo để gửi lên BE, với hai thông tin chính là userId và action là xoá khỏi card hoặc thêm mới vào card
@@ -64,7 +68,7 @@ function CardUserGroup({ cardMemberIds = [], onUpdateCardMembers }) {
       ))}
 
       {/* Nút này để mở popover thêm member */}
-      <Tooltip title='Add new member'>
+      {canEdit && <Tooltip title='Add new member'>
         <Box
           aria-describedby={popoverId}
           onClick={handleTogglePopover}
@@ -94,12 +98,12 @@ function CardUserGroup({ cardMemberIds = [], onUpdateCardMembers }) {
         >
           <AddIcon fontSize='small' />
         </Box>
-      </Tooltip>
+      </Tooltip>}
 
       {/* Khi Click vào + ở trên thì sẽ mở popover hiện toàn bộ users trong board để người dùng Click chọn thêm vào card  */}
       <Popover
         id={popoverId}
-        open={isOpenPopover}
+        open={canEdit && isOpenPopover}
         anchorEl={anchorPopoverElement}
         onClose={handleTogglePopover}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}

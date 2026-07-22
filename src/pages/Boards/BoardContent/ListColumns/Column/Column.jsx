@@ -39,7 +39,7 @@ import {
 } from '~/redux/activeBoard/activeBoardSlice'
 import ToggleFocusInput from '~/components/Form/ToggleFocusInput'
 
-function Column({ column }) {
+function Column({ column, canEdit }) {
   const dispatch = useDispatch()
   //Không dùng state của component mà chuyển sang dùng state của redux
   const board = useSelector(selectCurrentActiveBoard)
@@ -50,7 +50,11 @@ function Column({ column }) {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: column._id, data: { ...column } })
+  } = useSortable({
+    id: column._id,
+    data: { ...column },
+    disabled: !canEdit
+  })
   const dndKitColumnStyles = {
     // Nếu sử dụng CSS.Transform như docs sẽ lỗi kiểu stretch
     transform: CSS.Translate.toString(transform),
@@ -162,7 +166,12 @@ function Column({ column }) {
 
   // Phải bọc div ngoài cùng vì vấn đề chiều cao của column khi kéo thả sẽ có bug kiểu flickering
   return (
-    <div ref={setNodeRef} style={dndKitColumnStyles} {...attributes}>
+    <div
+      data-testid={`column-${column._id}`}
+      ref={setNodeRef}
+      style={dndKitColumnStyles}
+      {...attributes}
+    >
       {/* Box Column 01 */}
       <Box
         {...listeners}
@@ -191,8 +200,9 @@ function Column({ column }) {
           <ToggleFocusInput
             value={column?.title}
             onChangedValue={onUpdateColumnTitle}
+            disabled={!canEdit}
           />
-          <Box>
+          {canEdit && <Box>
             <Tooltip title='More options'>
               <ExpandMoreIcon
                 id='basic-column-dropdown'
@@ -270,14 +280,14 @@ function Column({ column }) {
                 <ListItemText>Archive this column</ListItemText>
               </MenuItem>
             </Menu>
-          </Box>
+          </Box>}
         </Box>
 
         {/* List Cards */}
-        <ListCards cards={orderedCards} />
+        <ListCards cards={orderedCards} canEdit={canEdit} />
 
         {/* Box Column Footer */}
-        <Box
+        {canEdit && <Box
           sx={{
             height: (theme) => theme.trello.columnFooterHeight,
             p: 2
@@ -375,7 +385,7 @@ function Column({ column }) {
               </Box>
             </Box>
           )}
-        </Box>
+        </Box>}
       </Box>
     </div>
   )

@@ -1,58 +1,76 @@
 import { useState } from 'react'
-import Box from '@mui/material/Box'
 import Avatar from '@mui/material/Avatar'
-import Tooltip from '@mui/material/Tooltip'
+import Box from '@mui/material/Box'
+import MenuItem from '@mui/material/MenuItem'
 import Popover from '@mui/material/Popover'
+import Select from '@mui/material/Select'
+import Tooltip from '@mui/material/Tooltip'
+import Typography from '@mui/material/Typography'
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts'
+import { useDispatch } from 'react-redux'
+import { updateBoardMemberRoleAPI } from '~/apis'
+import { updateBoardMemberRole } from '~/redux/activeBoard/activeBoardSlice'
+import { BOARD_ROLES } from '~/utils/constants'
+import { canManageBoardRoles } from '~/utils/boardPermissions'
 
-function BoardUserGroup({ boardUsers = [], limit = 5 }) {
-  /**
-   * Xử lý Popover để ẩn hoặc hiện toàn bộ user trên một cái popup, tương tự docs để tham khảo ở đây:
-   * https://mui.com/material-ui/react-popover/
-   */
-  const [anchorPopoverElement, setAnchorPopoverElement] = useState(null)
-  const isOpenPopover = Boolean(anchorPopoverElement)
-  const popoverId = isOpenPopover ? 'board-all-users-popover' : undefined
-  const handleTogglePopover = (event) => {
-    if (!anchorPopoverElement) setAnchorPopoverElement(event.currentTarget)
-    else setAnchorPopoverElement(null)
+const ASSIGNABLE_ROLES = [
+  BOARD_ROLES.ADMIN,
+  BOARD_ROLES.MEMBER,
+  BOARD_ROLES.VIEWER
+]
+
+function BoardUserGroup({
+  boardUsers = [],
+  boardId,
+  currentUserRole,
+  limit = 5
+}) {
+  const dispatch = useDispatch()
+  const [anchorElement, setAnchorElement] = useState(null)
+  const [updatingUserId, setUpdatingUserId] = useState(null)
+  const canManageRoles = canManageBoardRoles(currentUserRole)
+  const isOpen = Boolean(anchorElement)
+
+  const updateRole = async (userId, role) => {
+    setUpdatingUserId(userId)
+    try {
+      const updatedRole = await updateBoardMemberRoleAPI(boardId, userId, role)
+      dispatch(updateBoardMemberRole(updatedRole))
+    } catch (_error) {
+      // The shared Axios interceptor presents the API error to the user.
+    } finally {
+      setUpdatingUserId(null)
+    }
   }
 
-  // Lưu ý ở đây chúng ta không dùng Component AvatarGroup của MUI bởi nó không hỗ trợ tốt trong việc chúng ta cần custom & trigger xử lý phần tử tính toán cuối, đơn giản là cứ dùng Box và CSS - Style đám Avatar cho chuẩn kết hợp tính toán một chút thôi.
   return (
-    <Box sx={{ display: 'flex', gap: '4px' }}>
-      {/* Hiển thị giới hạn số lượng user theo số limit */}
-      {boardUsers.map((user, index) => {
-        if (index < limit) {
-          return (
-            <Tooltip title={user?.displayName} key={index}>
-              <Avatar
-                sx={{ width: 34, height: 34, cursor: 'pointer' }}
-                alt={user?.displayName}
-                src={user?.avatar}
-              />
-            </Tooltip>
-          )
-        }
-      })}
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      {boardUsers.slice(0, limit).map((user) => (
+        <Tooltip
+          title={`${user.displayName} · ${user.boardRole}`}
+          key={user._id}
+        >
+          <Avatar
+            sx={{ width: 34, height: 34 }}
+            alt={user.displayName}
+            src={user.avatar}
+          />
+        </Tooltip>
+      ))}
 
-      {/* Nếu số lượng users nhiều hơn limit thì hiện thêm +number */}
       {boardUsers.length > limit && (
-        <Tooltip title='Show more'>
+        <Tooltip title='Show all members'>
           <Box
-            aria-describedby={popoverId}
-            onClick={handleTogglePopover}
+            onClick={(event) => setAnchorElement(event.currentTarget)}
             sx={{
               width: 36,
               height: 36,
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '14px',
-              fontWeight: '500',
+              display: 'grid',
+              placeItems: 'center',
               borderRadius: '50%',
               color: 'white',
-              backgroundColor: '#a4b0be'
+              bgcolor: '#a4b0be'
             }}
           >
             +{boardUsers.length - limit}
@@ -60,31 +78,78 @@ function BoardUserGroup({ boardUsers = [], limit = 5 }) {
         </Tooltip>
       )}
 
-      {/* Khi Click vào +number ở trên thì sẽ mở popover hiện toàn bộ users, sẽ không limit nữa */}
+      {canManageRoles && (
+        <Tooltip title='Manage board roles'>
+          <Box
+            onClick={(event) => setAnchorElement(event.currentTarget)}
+            sx={{
+              width: 36,
+              height: 36,
+              cursor: 'pointer',
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: '50%',
+              color: 'white',
+              bgcolor: '#ffffff29'
+            }}
+          >
+            <ManageAccountsIcon fontSize='small' />
+          </Box>
+        </Tooltip>
+      )}
+
       <Popover
-        id={popoverId}
-        open={isOpenPopover}
-        anchorEl={anchorPopoverElement}
-        onClose={handleTogglePopover}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        open={isOpen}
+        anchorEl={anchorElement}
+        onClose={() => setAnchorElement(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Box
-          sx={{
-            p: 2,
-            maxWidth: '235px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1
-          }}
-        >
-          {boardUsers.map((user, index) => (
-            <Tooltip title={user?.displayName} key={index}>
+        <Box sx={{ width: 360, p: 2 }}>
+          <Typography fontWeight='bold' mb={1.5}>
+            Board members
+          </Typography>
+          {boardUsers.map((user) => (
+            <Box
+              key={user._id}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                py: 1
+              }}
+            >
               <Avatar
-                sx={{ width: 34, height: 34, cursor: 'pointer' }}
-                alt={user?.displayName}
-                src={user?.avatar}
+                sx={{ width: 34, height: 34 }}
+                alt={user.displayName}
+                src={user.avatar}
               />
-            </Tooltip>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography noWrap fontWeight='600'>
+                  {user.displayName}
+                </Typography>
+                <Typography noWrap variant='caption' color='text.secondary'>
+                  {user.email}
+                </Typography>
+              </Box>
+              {user.boardRole === BOARD_ROLES.OWNER ? (
+                <Typography variant='body2'>{BOARD_ROLES.OWNER}</Typography>
+              ) : (
+                <Select
+                  size='small'
+                  value={user.boardRole || BOARD_ROLES.MEMBER}
+                  disabled={!canManageRoles || updatingUserId === user._id}
+                  onChange={(event) => updateRole(user._id, event.target.value)}
+                  inputProps={{ 'aria-label': `Role for ${user.displayName}` }}
+                >
+                  {ASSIGNABLE_ROLES.map((role) => (
+                    <MenuItem key={role} value={role}>
+                      {role}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            </Box>
           ))}
         </Box>
       </Popover>

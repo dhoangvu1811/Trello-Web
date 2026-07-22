@@ -38,17 +38,16 @@ function LoginForm() {
     ...searchParams
   ])
 
-  const submitLogIn = (data) => {
+  const submitLogIn = async (data) => {
     const { email, password } = data
-    toast
-      .promise(dispatch(loginUserAPI({ email, password })), {
+    try {
+      await toast.promise(dispatch(loginUserAPI({ email, password })).unwrap(), {
         pending: 'Logging in...'
       })
-      .then((res) => {
-        // console.log('🚀 ~ submitLogIn ~ res:', res)
-        //Đoạn này sẽ kiểm tra nếu như không có lỗi thi chuyển hướng về route /
-        if (!res.error) navigate('/')
-      })
+      navigate('/boards', { replace: true })
+    } catch {
+      // The shared Axios interceptor presents the API error to the user.
+    }
   }
 
   const [showPassword, setShowPassword] = useState(false)
@@ -205,6 +204,14 @@ function LoginForm() {
               Login
             </Button>
           </CardActions>
+          <Box sx={{ px: '1em', pb: 1, textAlign: 'center' }}>
+            <Link
+              to='/account/forgot-password'
+              style={{ textDecoration: 'none' }}
+            >
+              <Typography color='primary'>Forgot password?</Typography>
+            </Link>
+          </Box>
           <Box sx={{ padding: '0 1em 1em 1em', textAlign: 'center' }}>
             <Typography>New to Trello MERN Stack Advanced?</Typography>
             <Link to='/register' style={{ textDecoration: 'none' }}>
