@@ -4,6 +4,9 @@ import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
 import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
+import Button from '@mui/material/Button'
+import Stack from '@mui/material/Stack'
+import { useState } from 'react'
 
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '~/redux/user/userSlice'
@@ -11,9 +14,14 @@ import { selectCurrentUser } from '~/redux/user/userSlice'
 function CardActivitySection({
   cardComments = [],
   onAddCardComment,
+  onUpdateCardComment,
+  onDeleteCardComment,
+  onReactCardComment,
   canComment
 }) {
   const currentUser = useSelector(selectCurrentUser)
+  const [editingCommentId, setEditingCommentId] = useState(null)
+  const [editingContent, setEditingContent] = useState('')
 
   const handleAddCardComment = (event) => {
     // Bắt hành động người dùng nhấn phím Enter && không phải hành động Shift + Enter
@@ -67,7 +75,7 @@ function CardActivitySection({
       {cardComments.map((comment, index) => (
         <Box
           sx={{ display: 'flex', gap: 1, width: '100%', mb: 1.5 }}
-          key={index}
+          key={comment._id || index}
         >
           <Tooltip title='trungquandev'>
             <Avatar
@@ -85,7 +93,20 @@ function CardActivitySection({
               {moment(comment.commentedAt).format('llll')}
             </Typography>
 
-            <Box
+            {editingCommentId === comment._id ? <TextField
+              fullWidth
+              multiline
+              size='small'
+              value={editingContent}
+              onChange={(event) => setEditingContent(event.target.value)}
+              onKeyDown={async (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  await onUpdateCardComment(comment._id, editingContent.trim())
+                  setEditingCommentId(null)
+                }
+              }}
+            /> : <Box
               sx={{
                 display: 'block',
                 bgcolor: (theme) =>
@@ -99,7 +120,42 @@ function CardActivitySection({
               }}
             >
               {comment.content}
-            </Box>
+              {comment.editedAt && <Typography
+                component='span'
+                sx={{ ml: 1, fontSize: 11, color: 'text.secondary' }}
+              >
+                (edited)
+              </Typography>}
+            </Box>}
+            {comment._id && canComment && <Stack direction='row' spacing={0.5} sx={{ mt: 0.5 }}>
+              {['👍', '❤️', '🎉'].map((emoji) => {
+                const reaction = comment.reactions?.find((item) => item.emoji === emoji)
+                return <Button
+                  key={emoji}
+                  size='small'
+                  variant={reaction?.userIds?.includes(currentUser?._id)
+                    ? 'contained'
+                    : 'text'}
+                  onClick={() => onReactCardComment(comment._id, emoji)}
+                >
+                  {emoji}{reaction?.userIds?.length ? ` ${reaction.userIds.length}` : ''}
+                </Button>
+              })}
+              {comment.userId === currentUser?._id && <>
+                <Button
+                  size='small'
+                  onClick={() => {
+                    setEditingCommentId(comment._id)
+                    setEditingContent(comment.content)
+                  }}
+                >Edit</Button>
+                <Button
+                  size='small'
+                  color='error'
+                  onClick={() => onDeleteCardComment(comment._id)}
+                >Delete</Button>
+              </>}
+            </Stack>}
           </Box>
         </Box>
       ))}

@@ -10,7 +10,11 @@ import { useSelector } from 'react-redux'
 import { selectCurrentActiveBoard } from '~/redux/activeBoard/activeBoardSlice'
 import InviteBoardUser from './InviteBoardUser'
 import BoardActivityDrawer from './BoardActivityDrawer'
-import { canManageBoard } from '~/utils/boardPermissions'
+import {
+  canEditBoardContent,
+  canManageBoard
+} from '~/utils/boardPermissions'
+import ArchivedCardsDrawer from './ArchivedCardsDrawer'
 
 const MENU_STYLES = {
   color: 'white',
@@ -29,6 +33,7 @@ const MENU_STYLES = {
 function BoardBar({ board }) {
   const activeBoard = useSelector(selectCurrentActiveBoard)
   const canInvite = canManageBoard(board.currentUserRole)
+  const canEdit = canEditBoardContent(board.currentUserRole)
 
   return (
     <Box
@@ -95,6 +100,7 @@ function BoardBar({ board }) {
         }}
       >
         <BoardActivityDrawer boardId={board._id} />
+        <ArchivedCardsDrawer boardId={board._id} canEdit={canEdit} />
 
         {/* Xử lý mời user vào làm thành viên của board*/}
         {canInvite && <InviteBoardUser boardId={board._id} />}

@@ -222,3 +222,54 @@ test('viewer sees the board but cannot mutate or drag its content', async ({ pag
   expect(updateRequests).toEqual([])
   await expect(page.getByTestId(`column-${backlogId}`).getByTestId(`card-${cardId}`)).toBeVisible()
 })
+
+test('owner can complete phase one card details', async ({ page }) => {
+  await login(page, 'owner@phase0.test')
+  await page.goto(`/boards/${boardId}`)
+  await page.getByTestId(`card-${cardId}`).click()
+
+  const priorityResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('combobox', { name: 'Priority' }).click()
+  await page.getByRole('option', { name: 'URGENT' }).click()
+  await priorityResponse
+
+  await page.getByLabel('Label name').fill('Release')
+  const labelResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Add label' }).click()
+  await labelResponse
+  await expect(page.getByText('Release')).toBeVisible()
+
+  await page.getByLabel('Checklist item').fill('Verify release')
+  const checklistResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Add checklist item' }).click()
+  await checklistResponse
+  await expect(page.getByText('Verify release')).toBeVisible()
+  const completeChecklistResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('checkbox').last().click()
+  await completeChecklistResponse
+
+  await page.getByLabel('Start date').fill('2030-01-01T09:00')
+  await page.getByLabel('Due date').fill('2030-01-02T09:00')
+  const datesResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Save dates' }).click()
+  await datesResponse
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId(`card-${cardId}`).getByText('Release')).toBeVisible()
+  await expect(page.getByTestId(`card-${cardId}`).getByText('1/1')).toBeVisible()
+})

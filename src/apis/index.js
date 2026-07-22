@@ -156,6 +156,68 @@ export const updateCardDetailsAPI = async (cardId, updateData) => {
   return response.data
 }
 
+export const setCardArchivedAPI = async (cardId, archived) => {
+  const response = await authorizedAxiosInstance.put(
+    `${API_ROOT}/v1/cards/${cardId}/archive`,
+    { archived }
+  )
+  return response.data
+}
+
+export const copyCardAPI = async (cardId, targetColumnId) => {
+  const response = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/cards/${cardId}/copy`,
+    { targetColumnId }
+  )
+  return response.data
+}
+
+export const moveCardAPI = async (cardId, targetColumnId) => {
+  const response = await authorizedAxiosInstance.put(
+    `${API_ROOT}/v1/cards/${cardId}/move`,
+    { targetColumnId }
+  )
+  return response.data
+}
+
+export const uploadCardAttachmentAPI = async (cardId, file) => {
+  const data = new FormData()
+  data.append('attachment', file)
+  const response = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/cards/${cardId}/attachments`,
+    data
+  )
+  return response.data
+}
+
+export const deleteCardAttachmentAPI = async (cardId, attachmentId) => {
+  const response = await authorizedAxiosInstance.delete(
+    `${API_ROOT}/v1/cards/${cardId}/attachments/${attachmentId}`
+  )
+  return response.data
+}
+
+export const fetchArchivedCardsAPI = async (boardId) => {
+  const response = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/cards/archived/board/${boardId}`
+  )
+  return response.data
+}
+
+export const fetchCardNotificationsAPI = async () => {
+  const response = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/notifications`
+  )
+  return response.data
+}
+
+export const markCardNotificationReadAPI = async (notificationId) => {
+  const response = await authorizedAxiosInstance.put(
+    `${API_ROOT}/v1/notifications/${notificationId}/read`
+  )
+  return response.data
+}
+
 export const inviteUserToBoardAPI = async (data) => {
   const response = await authorizedAxiosInstance.post(
     `${API_ROOT}/v1/invitations/board`,

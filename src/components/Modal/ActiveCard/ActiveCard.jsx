@@ -7,10 +7,6 @@ import Grid from '@mui/material/Unstable_Grid2'
 import Stack from '@mui/material/Stack'
 import Divider from '@mui/material/Divider'
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined'
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined'
-import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined'
-import WatchLaterOutlinedIcon from '@mui/icons-material/WatchLaterOutlined'
-import AttachFileOutlinedIcon from '@mui/icons-material/AttachFileOutlined'
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined'
 import AutoFixHighOutlinedIcon from '@mui/icons-material/AutoFixHighOutlined'
 import AspectRatioOutlinedIcon from '@mui/icons-material/AspectRatioOutlined'
@@ -31,6 +27,8 @@ import { toast } from 'react-toastify'
 import CardUserGroup from './CardUserGroup'
 import CardDescriptionMdEditor from './CardDescriptionMdEditor'
 import CardActivitySection from './CardActivitySection'
+import CardDetailsPanel from './CardDetailsPanel'
+import CardAttachments from './CardAttachments'
 
 import { styled } from '@mui/material/styles'
 import { useDispatch, useSelector } from 'react-redux'
@@ -40,7 +38,14 @@ import {
   selectIsShowModalActiveCard,
   updateCurrentActiveCard
 } from '~/redux/activeCard/activeCardSlice'
-import { updateCardDetailsAPI } from '~/apis'
+import {
+  copyCardAPI,
+  deleteCardAttachmentAPI,
+  moveCardAPI,
+  setCardArchivedAPI,
+  updateCardDetailsAPI,
+  uploadCardAttachmentAPI
+} from '~/apis'
 import {
   selectCurrentActiveBoard,
   updateCardInBoard
@@ -48,6 +53,10 @@ import {
 import { selectCurrentUser } from '~/redux/user/userSlice'
 import { CARD_MEMBER_ACTIONS } from '~/utils/constants'
 import { canEditBoardContent } from '~/utils/boardPermissions'
+import { useState } from 'react'
+import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
+import { useConfirm } from 'material-ui-confirm'
 const SidebarItem = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -79,6 +88,8 @@ function ActiveCard() {
   const activeBoard = useSelector(selectCurrentActiveBoard)
   const isShowModalActiveCard = useSelector(selectIsShowModalActiveCard)
   const canEdit = canEditBoardContent(activeBoard?.currentUserRole)
+  const [actionTargetColumnId, setActionTargetColumnId] = useState('')
+  const confirmArchive = useConfirm()
   // const [isOpen, setIsOpen] = useState(true)
   // const handleOpenModal = () => setIsOpen(true)
 
@@ -131,6 +142,65 @@ function ActiveCard() {
   // Dùng async/await ở đây để component con CardActivitySection chờ và nếu thành công thì mới clear thẻ input comment
   const onAddCardComment = async (commentToAdd) => {
     await callAPIUpdateCard({ commentToAdd })
+  }
+
+  const onUpdateCardComment = async (commentId, content) =>
+    await callAPIUpdateCard({ commentToUpdate: { commentId, content } })
+
+  const onDeleteCardComment = async (commentId) =>
+    await callAPIUpdateCard({ commentToDelete: { commentId } })
+
+  const onReactCardComment = async (commentId, emoji) =>
+    await callAPIUpdateCard({ commentReaction: { commentId, emoji } })
+
+  const onUploadAttachment = async (file) => {
+    const updatedCard = await uploadCardAttachmentAPI(activeCard._id, file)
+    dispatch(updateCurrentActiveCard(updatedCard))
+    dispatch(updateCardInBoard(updatedCard))
+  }
+
+  const onDeleteAttachment = async (attachmentId) => {
+    const updatedCard = await deleteCardAttachmentAPI(activeCard._id, attachmentId)
+    dispatch(updateCurrentActiveCard(updatedCard))
+    dispatch(updateCardInBoard(updatedCard))
+  }
+
+  const selectedColumnId = actionTargetColumnId || activeCard?.columnId || ''
+
+  const handleMoveCard = async () => {
+    if (selectedColumnId === activeCard.columnId) return
+    await toast.promise(moveCardAPI(activeCard._id, selectedColumnId), {
+      pending: 'Moving card...',
+      success: 'Card moved'
+    })
+    handleCloseModal()
+  }
+
+  const handleCopyCard = async () => {
+    await toast.promise(copyCardAPI(activeCard._id, selectedColumnId), {
+      pending: 'Copying card...',
+      success: 'Card copied'
+    })
+  }
+
+  const handleArchiveCard = async () => {
+    try {
+      await confirmArchive({
+        title: 'Archive this card?',
+        description: 'The card can be restored from the board archive.'
+      })
+      await setCardArchivedAPI(activeCard._id, true)
+      handleCloseModal()
+      toast.success('Card archived')
+    } catch {
+      // Cancellation leaves the card unchanged.
+    }
+  }
+
+  const handleShareCard = async () => {
+    const url = `${window.location.origin}/boards/${activeBoard._id}?cardId=${activeCard._id}`
+    await navigator.clipboard.writeText(url)
+    toast.success('Card link copied')
   }
 
   const onUpdateCardMembers = (incommingMemberInfo) => {
@@ -239,6 +309,14 @@ function ActiveCard() {
               />
             </Box>
 
+            <CardDetailsPanel
+              key={activeCard?._id}
+              card={activeCard}
+              currentUserId={currentUser?._id}
+              canEdit={canEdit}
+              onUpdate={callAPIUpdateCard}
+            />
+
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <SubjectRoundedIcon />
@@ -258,6 +336,13 @@ function ActiveCard() {
               />
             </Box>
 
+            <CardAttachments
+              attachments={activeCard?.attachments}
+              canEdit={canEdit}
+              onUpload={onUploadAttachment}
+              onDelete={onDeleteAttachment}
+            />
+
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <DvrOutlinedIcon />
@@ -273,6 +358,9 @@ function ActiveCard() {
               <CardActivitySection
                 cardComments={activeCard?.comments}
                 onAddCardComment={onAddCardComment}
+                onUpdateCardComment={onUpdateCardComment}
+                onDeleteCardComment={onDeleteCardComment}
+                onReactCardComment={onReactCardComment}
                 canComment={canEdit}
               />
             </Box>
@@ -303,22 +391,6 @@ function ActiveCard() {
                 <VisuallyHiddenInput type='file' onChange={onUploadCardCover} />
               </SidebarItem>}
 
-              <SidebarItem>
-                <AttachFileOutlinedIcon fontSize='small' />
-                Attachment
-              </SidebarItem>
-              <SidebarItem>
-                <LocalOfferOutlinedIcon fontSize='small' />
-                Labels
-              </SidebarItem>
-              <SidebarItem>
-                <TaskAltOutlinedIcon fontSize='small' />
-                Checklist
-              </SidebarItem>
-              <SidebarItem>
-                <WatchLaterOutlinedIcon fontSize='small' />
-                Dates
-              </SidebarItem>
               <SidebarItem>
                 <AutoFixHighOutlinedIcon fontSize='small' />
                 Custom Fields
@@ -355,11 +427,23 @@ function ActiveCard() {
               Actions
             </Typography>
             <Stack direction='column' spacing={1}>
-              <SidebarItem>
+              <TextField
+                select
+                size='small'
+                label='Target column'
+                value={selectedColumnId}
+                disabled={!canEdit}
+                onChange={(event) => setActionTargetColumnId(event.target.value)}
+              >
+                {(activeBoard?.columns || []).map((column) => (
+                  <MenuItem key={column._id} value={column._id}>{column.title}</MenuItem>
+                ))}
+              </TextField>
+              <SidebarItem onClick={canEdit ? handleMoveCard : undefined}>
                 <ArrowForwardOutlinedIcon fontSize='small' />
                 Move
               </SidebarItem>
-              <SidebarItem>
+              <SidebarItem onClick={canEdit ? handleCopyCard : undefined}>
                 <ContentCopyOutlinedIcon fontSize='small' />
                 Copy
               </SidebarItem>
@@ -367,11 +451,14 @@ function ActiveCard() {
                 <AutoAwesomeOutlinedIcon fontSize='small' />
                 Make Template
               </SidebarItem>
-              <SidebarItem>
+              <SidebarItem
+                data-testid='archive-active-card'
+                onClick={canEdit ? handleArchiveCard : undefined}
+              >
                 <ArchiveOutlinedIcon fontSize='small' />
                 Archive
               </SidebarItem>
-              <SidebarItem>
+              <SidebarItem onClick={handleShareCard}>
                 <ShareOutlinedIcon fontSize='small' />
                 Share
               </SidebarItem>
