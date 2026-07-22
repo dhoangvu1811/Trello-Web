@@ -123,8 +123,10 @@ export const resetPasswordAPI = async (data) => {
 }
 
 export const refreshTokenAPI = async () => {
-  const response = await authorizedAxiosInstance.get(
-    `${API_ROOT}/v1/users/refresh_token`
+  const response = await authorizedAxiosInstance.post(
+    `${API_ROOT}/v1/users/refresh_token`,
+    undefined,
+    { skipAuthErrorToast: true }
   )
   return response.data
 }

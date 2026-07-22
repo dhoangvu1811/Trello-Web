@@ -57,6 +57,11 @@ test.afterAll(cleanup)
 
 test('owner can log in, move a card, invite a viewer, and inspect activity', async ({ page }) => {
   await login(page, 'owner@phase0.test')
+  const persistedState = await page.evaluate(() =>
+    Object.values(localStorage).join(' ')
+  )
+  expect(persistedState).not.toContain('accessToken')
+  expect(persistedState).not.toContain('refreshToken')
   await expect(page.getByText('Phase Zero E2E Board')).toBeVisible()
   await page.getByRole('link', { name: 'Go to board' }).click()
   await expect(page).toHaveURL(`/boards/${boardId}`)
@@ -99,6 +104,14 @@ test('owner can log in, move a card, invite a viewer, and inspect activity', asy
   await page.getByRole('button', { name: 'Activity' }).click()
   await expect(page.getByText('moved a card')).toBeVisible()
   await expect(page.getByText('invited a board member')).toBeVisible()
+})
+
+test('logs out locally and returns to login', async ({ page }) => {
+  await login(page, 'owner@phase0.test')
+  await page.getByRole('button', { name: 'Account settings' }).click()
+  await page.getByRole('menuitem', { name: 'Logout' }).click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
+  await expect(page).toHaveURL('/login')
 })
 
 test('synchronizes board changes between two active users without reloading', async ({ browser }) => {

@@ -1,11 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { toast } from 'react-toastify'
-import authorizedAxiosInstance from '~/utils/authorizeAxios'
+import authorizedAxiosInstance, {
+  refreshAccessToken
+} from '~/utils/authorizeAxios'
 import { API_ROOT } from '~/utils/constants'
+import { notifyOtherTabsOfLogout } from '~/utils/authSession'
 
 //Khởi tạo một giá trị State của Slice trong redux
 const initialState = {
-  currentUser: null
+  currentUser: null,
+  accessTokenExpiresAt: null,
+  sessionExpiresAt: null,
+  initialized: false
 }
 
 //Các hành động gọi api (bất đồng bộ) và cập nhật dữ liệu vào redux, dùng middlaware createAsyncThunk đi kèm với extraReducers
@@ -23,14 +29,32 @@ export const loginUserAPI = createAsyncThunk(
 export const logoutUserAPI = createAsyncThunk(
   'user/logoutUserAPI',
   async (showSuccessMessage = true) => {
-    const response = await authorizedAxiosInstance.delete(
-      `${API_ROOT}/v1/users/logout`
-    )
-    if (showSuccessMessage) {
-      toast.success('Logged out successfully!')
+    try {
+      const response = await authorizedAxiosInstance.delete(
+        `${API_ROOT}/v1/users/logout`
+      )
+      if (showSuccessMessage) toast.success('Logged out successfully!')
+      return response.data
+    } finally {
+      notifyOtherTabsOfLogout()
     }
+  }
+)
+
+export const fetchSessionAPI = createAsyncThunk(
+  'user/fetchSessionAPI',
+  async () => {
+    const response = await authorizedAxiosInstance.get(
+      `${API_ROOT}/v1/users/session`,
+      { skipAuthErrorToast: true }
+    )
     return response.data
   }
+)
+
+export const refreshSessionAPI = createAsyncThunk(
+  'user/refreshSessionAPI',
+  async () => await refreshAccessToken()
 )
 
 export const updateUserAPI = createAsyncThunk(
@@ -49,20 +73,68 @@ export const userSlice = createSlice({
   name: 'user',
   initialState,
   // Reducers: Nơi xử lý dữ liệu đồng bộ
-  reducers: {},
+  reducers: {
+    clearCurrentSession: (state) => {
+      state.currentUser = null
+      state.accessTokenExpiresAt = null
+      state.sessionExpiresAt = null
+      state.initialized = true
+    },
+    updateTokenMetadata: (state, action) => {
+      state.accessTokenExpiresAt = action.payload.accessTokenExpiresAt
+      state.sessionExpiresAt = action.payload.sessionExpiresAt
+    }
+  },
   // extraReducers: Nơi xử lý dữ liệu bất đồng bộ
   extraReducers: (builder) => {
     builder.addCase(loginUserAPI.fulfilled, (state, action) => {
       // action.payload ở đây chính là response.data trả về ở trên
-      const user = action.payload
-
-      state.currentUser = user
+      state.currentUser = action.payload.user
+      state.accessTokenExpiresAt = action.payload.accessTokenExpiresAt
+      state.sessionExpiresAt = action.payload.sessionExpiresAt
+      state.initialized = true
+    })
+    builder.addCase(logoutUserAPI.pending, (state) => {
+      state.currentUser = null
+      state.accessTokenExpiresAt = null
+      state.sessionExpiresAt = null
+      state.initialized = true
     })
     builder.addCase(logoutUserAPI.fulfilled, (state) => {
       /**
        * APi logout sau khi gọi thành công thì sẽ clear thông tin currentUser về null ở đây
        */
       state.currentUser = null
+      state.accessTokenExpiresAt = null
+      state.sessionExpiresAt = null
+      state.initialized = true
+    })
+    builder.addCase(logoutUserAPI.rejected, (state) => {
+      state.currentUser = null
+      state.accessTokenExpiresAt = null
+      state.sessionExpiresAt = null
+      state.initialized = true
+    })
+    builder.addCase(fetchSessionAPI.pending, (state) => {
+      state.initialized = false
+    })
+    builder.addCase(fetchSessionAPI.fulfilled, (state, action) => {
+      state.currentUser = action.payload.user
+      state.accessTokenExpiresAt = action.payload.accessTokenExpiresAt
+      state.sessionExpiresAt = action.payload.sessionExpiresAt
+      state.initialized = true
+    })
+    builder.addCase(fetchSessionAPI.rejected, (state) => {
+      state.currentUser = null
+      state.accessTokenExpiresAt = null
+      state.sessionExpiresAt = null
+      state.initialized = true
+    })
+    builder.addCase(refreshSessionAPI.rejected, (state) => {
+      state.currentUser = null
+      state.accessTokenExpiresAt = null
+      state.sessionExpiresAt = null
+      state.initialized = true
     })
     builder.addCase(updateUserAPI.fulfilled, (state, action) => {
       const user = action.payload
@@ -75,9 +147,15 @@ export const userSlice = createSlice({
 // export const {} = userSlice.actions
 
 //Selectors: là nơi dành cho các component bên dưới gọi bằng hook useSelector() để lấy dữ liệu từ trong kho redux store ra dùng
+export const { clearCurrentSession, updateTokenMetadata } = userSlice.actions
+
 export const selectCurrentUser = (state) => {
   return state.user.currentUser
 }
+export const selectAuthInitialized = (state) => state.user.initialized
+export const selectAccessTokenExpiresAt = (state) =>
+  state.user.accessTokenExpiresAt
+export const selectSessionExpiresAt = (state) => state.user.sessionExpiresAt
 
 // export default userSlice.reducer
 export const userReducer = userSlice.reducer
