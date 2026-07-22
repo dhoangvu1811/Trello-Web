@@ -73,6 +73,9 @@ function Notifications() {
   // fetch danh sách các lời mới invitations
   useEffect(() => {
     dispatch(fetchInvitationsAPI())
+    fetchCardNotificationsAPI()
+      .then(setCardNotifications)
+      .catch(() => setCardNotifications([]))
 
     // Tạo func xử lý khi nhận được sự kiện real-time
     const onReceiveNewInvitation = (invitation) => {

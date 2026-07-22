@@ -14,7 +14,6 @@ import AddToDriveOutlinedIcon from '@mui/icons-material/AddToDriveOutlined'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined'
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
-import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined'
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined'
 import SubjectRoundedIcon from '@mui/icons-material/SubjectRounded'
@@ -427,7 +426,7 @@ function ActiveCard() {
               Actions
             </Typography>
             <Stack direction='column' spacing={1}>
-              <TextField
+              {canEdit && <TextField
                 select
                 size='small'
                 label='Target column'
@@ -438,26 +437,22 @@ function ActiveCard() {
                 {(activeBoard?.columns || []).map((column) => (
                   <MenuItem key={column._id} value={column._id}>{column.title}</MenuItem>
                 ))}
-              </TextField>
-              <SidebarItem onClick={canEdit ? handleMoveCard : undefined}>
+              </TextField>}
+              {canEdit && <SidebarItem onClick={handleMoveCard}>
                 <ArrowForwardOutlinedIcon fontSize='small' />
                 Move
-              </SidebarItem>
-              <SidebarItem onClick={canEdit ? handleCopyCard : undefined}>
+              </SidebarItem>}
+              {canEdit && <SidebarItem onClick={handleCopyCard}>
                 <ContentCopyOutlinedIcon fontSize='small' />
                 Copy
-              </SidebarItem>
-              <SidebarItem>
-                <AutoAwesomeOutlinedIcon fontSize='small' />
-                Make Template
-              </SidebarItem>
-              <SidebarItem
+              </SidebarItem>}
+              {canEdit && <SidebarItem
                 data-testid='archive-active-card'
-                onClick={canEdit ? handleArchiveCard : undefined}
+                onClick={handleArchiveCard}
               >
                 <ArchiveOutlinedIcon fontSize='small' />
                 Archive
-              </SidebarItem>
+              </SidebarItem>}
               <SidebarItem onClick={handleShareCard}>
                 <ShareOutlinedIcon fontSize='small' />
                 Share
