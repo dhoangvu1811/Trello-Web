@@ -65,6 +65,12 @@ function Card({ card, canEdit }) {
     ? (completedChecklistItems / card.checklist.length) * 100
     : 0
   const isOverdue = card?.dueDate && !card?.completedAt && card.dueDate < Date.now()
+  const priorityColors = {
+    LOW: 'success',
+    MEDIUM: 'info',
+    HIGH: 'warning',
+    URGENT: 'error'
+  }
 
   const setActiveCard = () => {
     dispatch(updateCurrentActiveCard(card))
@@ -103,6 +109,12 @@ function Card({ card, canEdit }) {
             />
           ))}
         </Box>}
+        {card?.priority && <Chip
+          size='small'
+          color={priorityColors[card.priority] || 'default'}
+          label={card.priority}
+          sx={{ mb: 1 }}
+        />}
         <Typography>{card?.title}</Typography>
         {!!card?.checklist?.length && <LinearProgress
           variant='determinate'
