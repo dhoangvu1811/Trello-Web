@@ -28,6 +28,11 @@ import {
   fetchCardNotificationsAPI,
   markCardNotificationReadAPI
 } from '~/apis'
+import {
+  CARD_NOTIFICATIONS_UPDATED_EVENT,
+  createNotificationRefreshHandler,
+  startNotificationPolling
+} from '~/realtime/cardNotificationsRealtime'
 
 function Notifications() {
   const dispatch = useDispatch()
@@ -73,9 +78,19 @@ function Notifications() {
   // fetch danh sách các lời mới invitations
   useEffect(() => {
     dispatch(fetchInvitationsAPI())
-    fetchCardNotificationsAPI()
+    const refreshCardNotifications = () => fetchCardNotificationsAPI()
       .then(setCardNotifications)
       .catch(() => setCardNotifications([]))
+    refreshCardNotifications()
+    const {
+      handleNotificationsUpdated,
+      dispose
+    } = createNotificationRefreshHandler({
+      refreshNotifications: refreshCardNotifications
+    })
+    const stopNotificationPolling = startNotificationPolling({
+      refreshNotifications: refreshCardNotifications
+    })
 
     // Tạo func xử lý khi nhận được sự kiện real-time
     const onReceiveNewInvitation = (invitation) => {
@@ -90,10 +105,20 @@ function Notifications() {
 
     // Lắng nghe một sự kiện real time có tên là BE_USER_INVITED_TO_BOARD
     socketIoInstance.on('BE_USER_INVITED_TO_BOARD', onReceiveNewInvitation)
+    socketIoInstance.on(
+      CARD_NOTIFICATIONS_UPDATED_EVENT,
+      handleNotificationsUpdated
+    )
 
     // Clean up sự kiện để ngăn chặn việc bị đăng ký lặp lại event
     return () => {
       socketIoInstance.off('BE_USER_INVITED_TO_BOARD', onReceiveNewInvitation)
+      socketIoInstance.off(
+        CARD_NOTIFICATIONS_UPDATED_EVENT,
+        handleNotificationsUpdated
+      )
+      dispose()
+      stopNotificationPolling()
     }
   }, [dispatch, currentUser._id])
 
