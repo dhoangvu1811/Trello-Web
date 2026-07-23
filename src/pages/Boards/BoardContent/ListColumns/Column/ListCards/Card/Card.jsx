@@ -9,6 +9,7 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import { isCardOverdue } from '~/utils/cardPhase1'
 import { Card as MuiCard } from '@mui/material'
 import GroupIcon from '@mui/icons-material/Group'
 import CommentIcon from '@mui/icons-material/Comment'
@@ -64,7 +65,7 @@ function Card({ card, canEdit }) {
   const checklistProgress = card?.checklist?.length
     ? (completedChecklistItems / card.checklist.length) * 100
     : 0
-  const isOverdue = card?.dueDate && !card?.completedAt && card.dueDate < Date.now()
+  const isOverdue = isCardOverdue(card)
   const priorityColors = {
     LOW: 'success',
     MEDIUM: 'info',

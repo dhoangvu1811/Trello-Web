@@ -17,14 +17,12 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { CARD_PRIORITIES } from '~/utils/constants'
-
-const toDateTimeInput = (timestamp) => {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16)
-}
+import {
+  dateTimeInputToTimestamp,
+  getChecklistProgress,
+  toDateTimeInput,
+  toggleWatcher
+} from '~/utils/cardPhase1'
 
 function CardDetailsPanel({ card, currentUserId, canEdit, onUpdate }) {
   const [startDate, setStartDate] = useState(toDateTimeInput(card?.startDate))
@@ -33,14 +31,11 @@ function CardDetailsPanel({ card, currentUserId, canEdit, onUpdate }) {
   const [labelColor, setLabelColor] = useState('#0C66E4')
   const [checklistTitle, setChecklistTitle] = useState('')
   const checklist = card?.checklist || []
-  const completedItems = checklist.filter((item) => item.isCompleted).length
-  const progress = checklist.length
-    ? Math.round((completedItems / checklist.length) * 100)
-    : 0
+  const { percentage: progress } = getChecklistProgress(checklist)
 
   const saveDates = () => onUpdate({
-    startDate: startDate ? new Date(startDate).getTime() : null,
-    dueDate: dueDate ? new Date(dueDate).getTime() : null
+    startDate: dateTimeInputToTimestamp(startDate),
+    dueDate: dateTimeInputToTimestamp(dueDate)
   })
 
   const addLabel = async () => {
@@ -89,6 +84,7 @@ function CardDetailsPanel({ card, currentUserId, canEdit, onUpdate }) {
           <FormControlLabel
             control={
               <Checkbox
+                inputProps={{ 'aria-label': 'Card completed' }}
                 checked={Boolean(card?.completedAt)}
                 disabled={!canEdit}
                 onChange={(event) => onUpdate({
@@ -102,9 +98,7 @@ function CardDetailsPanel({ card, currentUserId, canEdit, onUpdate }) {
             variant={isWatching ? 'contained' : 'outlined'}
             disabled={!canEdit}
             onClick={() => onUpdate({
-              watcherIds: isWatching
-                ? card.watcherIds.filter((id) => id !== currentUserId)
-                : [...(card?.watcherIds || []), currentUserId]
+              watcherIds: toggleWatcher(card?.watcherIds, currentUserId)
             })}
           >
             {isWatching ? 'Watching' : 'Watch'}
@@ -182,6 +176,7 @@ function CardDetailsPanel({ card, currentUserId, canEdit, onUpdate }) {
           {checklist.map((item) => (
             <Stack key={item._id} direction='row' alignItems='center'>
               <Checkbox
+                inputProps={{ 'aria-label': `Complete ${item.title}` }}
                 checked={item.isCompleted}
                 disabled={!canEdit}
                 onChange={(event) => updateChecklistItem(item._id, {
