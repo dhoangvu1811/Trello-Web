@@ -197,6 +197,14 @@ export const deleteCardAttachmentAPI = async (cardId, attachmentId) => {
   return response.data
 }
 
+export const downloadCardAttachmentAPI = async (cardId, attachmentId) => {
+  const response = await authorizedAxiosInstance.get(
+    `${API_ROOT}/v1/cards/${cardId}/attachments/${attachmentId}/download`,
+    { responseType: 'blob' }
+  )
+  return response.data
+}
+
 export const fetchArchivedCardsAPI = async (boardId) => {
   const response = await authorizedAxiosInstance.get(
     `${API_ROOT}/v1/cards/archived/board/${boardId}`

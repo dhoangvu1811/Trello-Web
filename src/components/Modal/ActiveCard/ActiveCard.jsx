@@ -40,11 +40,13 @@ import {
 import {
   copyCardAPI,
   deleteCardAttachmentAPI,
+  downloadCardAttachmentAPI,
   moveCardAPI,
   setCardArchivedAPI,
   updateCardDetailsAPI,
   uploadCardAttachmentAPI
 } from '~/apis'
+import { saveBlobAsFile } from '~/utils/fileDownloads'
 import {
   selectCurrentActiveBoard,
   updateCardInBoard
@@ -162,6 +164,14 @@ function ActiveCard() {
     const updatedCard = await deleteCardAttachmentAPI(activeCard._id, attachmentId)
     dispatch(updateCurrentActiveCard(updatedCard))
     dispatch(updateCardInBoard(updatedCard))
+  }
+
+  const onDownloadAttachment = async (attachment) => {
+    const blob = await downloadCardAttachmentAPI(
+      activeCard._id,
+      attachment._id
+    )
+    saveBlobAsFile(blob, attachment.name)
   }
 
   const selectedColumnId = actionTargetColumnId || activeCard?.columnId || ''
@@ -340,6 +350,7 @@ function ActiveCard() {
               canEdit={canEdit}
               onUpload={onUploadAttachment}
               onDelete={onDeleteAttachment}
+              onDownload={onDownloadAttachment}
             />
 
             <Box sx={{ mb: 3 }}>
