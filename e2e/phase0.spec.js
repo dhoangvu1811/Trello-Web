@@ -222,3 +222,195 @@ test('viewer sees the board but cannot mutate or drag its content', async ({ pag
   expect(updateRequests).toEqual([])
   await expect(page.getByTestId(`column-${backlogId}`).getByTestId(`card-${cardId}`)).toBeVisible()
 })
+
+test('owner can complete phase one card details', async ({ page }) => {
+  await login(page, 'owner@phase0.test')
+  await page.goto(`/boards/${boardId}`)
+  await page.getByTestId(`card-${cardId}`).click()
+
+  const priorityResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('combobox', { name: 'Priority' }).click()
+  await page.getByRole('option', { name: 'URGENT' }).click()
+  await priorityResponse
+
+  await page.getByLabel('Label name').fill('Release')
+  const labelResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Add label' }).click()
+  await labelResponse
+  await expect(page.getByText('Release')).toBeVisible()
+
+  await page.getByLabel('Checklist item').fill('Verify release')
+  const checklistResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Add checklist item' }).click()
+  await checklistResponse
+  await expect(page.getByText('Verify release')).toBeVisible()
+  const completeChecklistResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('checkbox').last().click()
+  await completeChecklistResponse
+
+  const watchResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Watch', exact: true }).click()
+  await watchResponse
+  await expect(page.getByRole('button', { name: 'Watching' })).toBeVisible()
+
+  const completedResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('checkbox', { name: 'Card completed' }).click()
+  await completedResponse
+
+  await page.getByLabel('Start date').fill('2030-01-01T09:00')
+  await page.getByLabel('Due date').fill('2030-01-02T09:00')
+  const datesResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Save dates' }).click()
+  await datesResponse
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId(`card-${cardId}`).getByText('Release')).toBeVisible()
+  await expect(page.getByTestId(`card-${cardId}`).getByText('1/1')).toBeVisible()
+})
+
+test('owner can edit, react to, and delete a phase one comment', async ({ page }) => {
+  await login(page, 'owner@phase0.test')
+  await page.goto(`/boards/${boardId}`)
+  await page.getByTestId(`card-${cardId}`).click()
+
+  const addResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByPlaceholder('Write a comment...').fill('Phase one comment')
+  await page.getByPlaceholder('Write a comment...').press('Enter')
+  await addResponse
+  await expect(page.getByText('Phase one comment')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Edit', exact: true }).click()
+  const editResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  const editInput = page.getByDisplayValue('Phase one comment')
+  await editInput.fill('Edited phase one comment')
+  await editInput.press('Enter')
+  await editResponse
+  await expect(page.getByText('Edited phase one comment')).toBeVisible()
+  await expect(page.getByText('(edited)')).toBeVisible()
+
+  const reactionResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: '👍', exact: true }).click()
+  await reactionResponse
+  await expect(page.getByRole('button', { name: '👍 1' })).toBeVisible()
+
+  const deleteResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}`) &&
+      response.request().method() === 'PUT' && response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  await deleteResponse
+  await expect(page.getByText('Edited phase one comment')).toHaveCount(0)
+})
+
+test('owner can copy, share, archive, and restore a phase one card', async ({
+  page,
+  context
+}) => {
+  await context.grantPermissions(
+    ['clipboard-read', 'clipboard-write'],
+    { origin: 'http://127.0.0.1:5173' }
+  )
+  await login(page, 'owner@phase0.test')
+  await page.goto(`/boards/${boardId}`)
+  await page.getByTestId(`card-${cardId}`).click()
+
+  await page.getByLabel('Target column').click()
+  await page.getByRole('option', { name: 'Done' }).click()
+  const copyResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}/copy`) &&
+      response.status() === 201
+  )
+  await page.getByText('Copy', { exact: true }).click()
+  await copyResponse
+  await expect(page.getByText('Drag me safely (copy)')).toBeVisible()
+
+  await page.getByText('Share', { exact: true }).click()
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(`http://127.0.0.1:5173/boards/${boardId}?cardId=${cardId}`)
+
+  const archiveResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}/archive`) &&
+      response.status() === 200
+  )
+  await page.getByTestId('archive-active-card').click()
+  await page.getByRole('button', { name: 'Confirm' }).click()
+  await archiveResponse
+  await expect(page.getByTestId(`card-${cardId}`)).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Archive', exact: true }).click()
+  await expect(page.getByText('Drag me safely', { exact: true })).toBeVisible()
+  const restoreResponse = page.waitForResponse(
+    (response) => response.url().endsWith(`/cards/${cardId}/archive`) &&
+      response.status() === 200
+  )
+  await page.getByRole('button', { name: 'Restore' }).click()
+  await restoreResponse
+  await expect(page.getByText('Drag me safely', { exact: true })).toHaveCount(0)
+})
+
+test('card assignment updates the recipient notification badge in real time', async ({
+  browser
+}) => {
+  const ownerContext = await browser.newContext()
+  const viewerContext = await browser.newContext()
+  const ownerPage = await ownerContext.newPage()
+  const viewerPage = await viewerContext.newPage()
+
+  try {
+    await Promise.all([
+      login(ownerPage, 'owner@phase0.test'),
+      login(viewerPage, 'viewer@phase0.test')
+    ])
+    await ownerPage.goto(`/boards/${boardId}`)
+    await ownerPage.getByTestId(`card-${cardId}`).click()
+    await ownerPage.getByLabel('Add new member').click()
+
+    const assignResponse = ownerPage.waitForResponse(
+      (response) => response.url().endsWith(`/cards/${cardId}`) &&
+        response.request().method() === 'PUT' && response.status() === 200
+    )
+    await ownerPage.getByAltText('viewer').click()
+    await assignResponse
+
+    await expect(
+      viewerPage.locator('#basic-button-open-notification .MuiBadge-badge')
+    ).toHaveText('1')
+    await viewerPage.locator('#basic-button-open-notification').click()
+    await expect(
+      viewerPage.getByText(/You were assigned to card/)
+    ).toBeVisible()
+  } finally {
+    await ownerContext.close()
+    await viewerContext.close()
+  }
+})

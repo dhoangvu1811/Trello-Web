@@ -24,19 +24,41 @@ import {
 import { socketIoInstance } from '~/socketClient'
 import { selectCurrentUser } from '~/redux/user/userSlice'
 import { useNavigate } from 'react-router-dom'
+import {
+  fetchCardNotificationsAPI,
+  markCardNotificationReadAPI
+} from '~/apis'
+import {
+  CARD_NOTIFICATIONS_UPDATED_EVENT,
+  createNotificationRefreshHandler,
+  startNotificationPolling
+} from '~/realtime/cardNotificationsRealtime'
 
 function Notifications() {
   const dispatch = useDispatch()
   const currentUser = useSelector(selectCurrentUser)
   const notifications = useSelector(selectCurrentNotification)
   const [newNotifincation, setNewNotification] = useState(false)
+  const [cardNotifications, setCardNotifications] = useState([])
   const navigate = useNavigate()
 
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
-  const handleClickNotificationIcon = (event) => {
+  const handleClickNotificationIcon = async (event) => {
     setAnchorEl(event.currentTarget)
     setNewNotification(false)
+    setCardNotifications(await fetchCardNotificationsAPI())
+  }
+
+  const openCardNotification = async (notification) => {
+    if (!notification.readAt) {
+      await markCardNotificationReadAPI(notification._id)
+      setCardNotifications((current) => current.map((item) =>
+        item._id === notification._id ? { ...item, readAt: Date.now() } : item
+      ))
+    }
+    navigate(`/boards/${notification.boardId}?cardId=${notification.cardId}`)
+    handleClose()
   }
   const handleClose = () => {
     setAnchorEl(null)
@@ -56,6 +78,19 @@ function Notifications() {
   // fetch danh sách các lời mới invitations
   useEffect(() => {
     dispatch(fetchInvitationsAPI())
+    const refreshCardNotifications = () => fetchCardNotificationsAPI()
+      .then(setCardNotifications)
+      .catch(() => setCardNotifications([]))
+    refreshCardNotifications()
+    const {
+      handleNotificationsUpdated,
+      dispose
+    } = createNotificationRefreshHandler({
+      refreshNotifications: refreshCardNotifications
+    })
+    const stopNotificationPolling = startNotificationPolling({
+      refreshNotifications: refreshCardNotifications
+    })
 
     // Tạo func xử lý khi nhận được sự kiện real-time
     const onReceiveNewInvitation = (invitation) => {
@@ -70,10 +105,20 @@ function Notifications() {
 
     // Lắng nghe một sự kiện real time có tên là BE_USER_INVITED_TO_BOARD
     socketIoInstance.on('BE_USER_INVITED_TO_BOARD', onReceiveNewInvitation)
+    socketIoInstance.on(
+      CARD_NOTIFICATIONS_UPDATED_EVENT,
+      handleNotificationsUpdated
+    )
 
     // Clean up sự kiện để ngăn chặn việc bị đăng ký lặp lại event
     return () => {
       socketIoInstance.off('BE_USER_INVITED_TO_BOARD', onReceiveNewInvitation)
+      socketIoInstance.off(
+        CARD_NOTIFICATIONS_UPDATED_EVENT,
+        handleNotificationsUpdated
+      )
+      dispose()
+      stopNotificationPolling()
     }
   }, [dispatch, currentUser._id])
 
@@ -82,7 +127,10 @@ function Notifications() {
       <Tooltip title='Notifications'>
         <Badge
           color='warning'
-          variant={newNotifincation ? 'dot' : 'none'}
+          badgeContent={cardNotifications.filter((item) => !item.readAt).length || undefined}
+          variant={newNotifincation && !cardNotifications.some((item) => !item.readAt)
+            ? 'dot'
+            : 'standard'}
           sx={{ cursor: 'pointer' }}
           id='basic-button-open-notification'
           aria-controls={open ? 'basic-notification-drop-down' : undefined}
@@ -106,11 +154,35 @@ function Notifications() {
         onClose={handleClose}
         MenuListProps={{ 'aria-labelledby': 'basic-button-open-notification' }}
       >
-        {(!notifications || notifications.length === 0) && (
+        {(!notifications || notifications.length === 0) &&
+          cardNotifications.length === 0 && (
           <MenuItem sx={{ minWidth: 200 }}>
             You do not have any new notifications.
           </MenuItem>
         )}
+        {cardNotifications.map((notification) => (
+          <Box key={notification._id}>
+            <MenuItem
+              onClick={() => openCardNotification(notification)}
+              sx={{
+                minWidth: 280,
+                maxWidth: 420,
+                whiteSpace: 'normal',
+                bgcolor: notification.readAt ? 'transparent' : 'action.hover'
+              }}
+            >
+              <Box>
+                <Typography sx={{ fontWeight: notification.readAt ? 400 : 700 }}>
+                  {notification.message}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {moment(notification.createdAt).format('llll')}
+                </Typography>
+              </Box>
+            </MenuItem>
+            <Divider />
+          </Box>
+        ))}
         {notifications?.map((notification, index) => (
           <Box key={index}>
             <MenuItem

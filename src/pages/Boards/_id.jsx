@@ -15,7 +15,7 @@ import {
   selectCurrentActiveBoard
 } from '~/redux/activeBoard/activeBoardSlice'
 import { useSelector, useDispatch } from 'react-redux'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import PageLoadingSpinner from '~/components/Loading/PageLoadingSpinner'
 import ActiveCard from '~/components/Modal/ActiveCard/ActiveCard'
 import { socketIoInstance } from '~/socketClient'
@@ -24,6 +24,10 @@ import {
   BOARD_UPDATED_EVENT,
   createBoardRefreshHandler
 } from '~/realtime/boardRealtime'
+import {
+  showModalActiveCard,
+  updateCurrentActiveCard
+} from '~/redux/activeCard/activeCardSlice'
 
 function Board() {
   const dispatch = useDispatch()
@@ -31,6 +35,7 @@ function Board() {
   const board = useSelector(selectCurrentActiveBoard)
 
   const { boardId } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const canEdit = canEditBoardContent(board?.currentUserRole)
 
   useEffect(() => {
@@ -55,6 +60,19 @@ function Board() {
       socketIoInstance.emit('FE_LEAVE_BOARD', boardId)
     }
   }, [dispatch, boardId])
+
+  useEffect(() => {
+    const cardId = searchParams.get('cardId')
+    if (!board || !cardId) return
+    const card = board.columns
+      .flatMap((column) => column.cards)
+      .find((item) => item._id === cardId)
+    if (card) {
+      dispatch(updateCurrentActiveCard(card))
+      dispatch(showModalActiveCard())
+    }
+    setSearchParams({}, { replace: true })
+  }, [board, dispatch, searchParams, setSearchParams])
 
   /* Gọi Api và xử lý kéo thả column
   Cập nhật mảng columnOrderIds của board chứa column (thay đổi vị trí) */
