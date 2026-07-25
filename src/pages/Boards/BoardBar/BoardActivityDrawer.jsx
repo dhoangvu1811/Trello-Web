@@ -9,24 +9,7 @@ import Typography from '@mui/material/Typography'
 import HistoryIcon from '@mui/icons-material/History'
 import moment from 'moment'
 import { fetchBoardActivitiesAPI } from '~/apis'
-
-const ACTION_LABELS = {
-  BOARD_CREATED: 'created the board',
-  BOARD_UPDATED: 'updated the board',
-  BOARD_MEMBER_ROLE_CHANGED: 'changed a member role',
-  COLUMN_CREATED: 'created a column',
-  COLUMN_UPDATED: 'updated a column',
-  COLUMN_DELETED: 'deleted a column',
-  CARD_CREATED: 'created a card',
-  CARD_UPDATED: 'updated a card',
-  CARD_MOVED: 'moved a card',
-  CARD_COMMENTED: 'commented on a card',
-  CARD_MEMBER_ADDED: 'assigned a card member',
-  CARD_MEMBER_REMOVED: 'removed a card member',
-  INVITATION_CREATED: 'invited a board member',
-  INVITATION_ACCEPTED: 'accepted a board invitation',
-  INVITATION_REJECTED: 'rejected a board invitation'
-}
+import { formatActivityMessage } from '~/utils/activityMessages'
 
 function BoardActivityDrawer({ boardId }) {
   const [open, setOpen] = useState(false)
@@ -115,7 +98,7 @@ function BoardActivityDrawer({ boardId }) {
                   <strong>
                     {activity.actor?.displayName || 'Former member'}
                   </strong>{' '}
-                  {ACTION_LABELS[activity.action] || activity.action}
+                  {formatActivityMessage(activity)}
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>
                   {moment(activity.createdAt).format('llll')}

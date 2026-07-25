@@ -13,7 +13,13 @@ import VisuallyHiddenInput from '~/components/Form/VisuallyHiddenInput'
 import { attachmentFileValidator } from '~/utils/validators'
 import { toast } from 'react-toastify'
 
-function CardAttachments({ attachments = [], canEdit, onUpload, onDelete }) {
+function CardAttachments({
+  attachments = [],
+  canEdit,
+  onUpload,
+  onDelete,
+  onDownload
+}) {
   const handleUpload = async (event) => {
     const file = event.target.files?.[0]
     const error = attachmentFileValidator(file)
@@ -59,7 +65,15 @@ function CardAttachments({ attachments = [], canEdit, onUpload, onDelete }) {
             >
               <ListItemText
                 primary={
-                  <Link href={attachment.url} target='_blank' rel='noreferrer'>
+                  <Link
+                    component='button'
+                    type='button'
+                    onClick={() => toast.promise(
+                      onDownload(attachment),
+                      { pending: `Downloading ${attachment.name}...` }
+                    )}
+                    sx={{ textAlign: 'left' }}
+                  >
                     {attachment.name}
                   </Link>
                 }
